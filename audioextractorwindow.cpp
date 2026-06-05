@@ -6,6 +6,7 @@
 #include <QProcess>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QStandardPaths>
 
 AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     : QWidget(parent)
@@ -58,28 +59,16 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     }
 
     // 寻找ffmpeg的路径
-    QString buildPath = QCoreApplication::applicationDirPath();
-    QString ffmpegPath = "";
+    QString ffmpegPath = QStandardPaths::findExecutable("ffmpeg", { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" });
 
-    // 探测路径方案 1：如果在 .app 内部的 MacOS 文件夹下 (方案B)
-    if (QFile::exists(buildPath + "/ffmpeg")) {
-        ffmpegPath = buildPath + "/ffmpeg";
-    }
-    // 探测路径方案 2：如果是往外跳三级，在 build 根目录下 (方案A)
-    else if (QFile::exists(buildPath + "/../../../ffmpeg")) {
-        ffmpegPath = buildPath + "/../../../ffmpeg";
-    }
-    // 探测路径方案 3：以防万一，如果只隔了两层
-    else if (QFile::exists(buildPath + "/../../ffmpeg")) {
-        ffmpegPath = buildPath + "/../../ffmpeg";
-    }
-
-    // 如果全灭，说明文件真的没放对地方
     if (ffmpegPath.isEmpty()) {
-        ui->txtLog->append("❌ 严重错误：在以下位置均未找到 ffmpeg 二进制文件！");
-        ui->txtLog->append("当前程序运行位置: " + buildPath);
-        ui->txtLog->append("请确保 ffmpeg 放入了 build 根目录或 .app 包内的 MacOS 文件夹中。");
-        return;
+
+        qWarning() << "ffmpeg not found in PATH";
+
+    } else {
+
+        qDebug() << "ffmpeg path:" << ffmpegPath;
+
     }
     //--------寻找结束--------
 

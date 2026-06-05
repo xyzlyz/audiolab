@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include <QProcess>
+#include <QStandardPaths>
 #include <QDebug>
 #include <QCoreApplication>
 #include "mainwindow.h"
@@ -17,9 +18,19 @@ MainWindow::MainWindow(QWidget *parent)
 //测试ffmpeg的版本以及调用路径
 void MainWindow::testFFmpeg(){
     QString buildPath = QCoreApplication::applicationDirPath();
-    qDebug() << "=== 程序当前期待 ffmpeg 的绝对路径为 ===";
-    qDebug() << buildPath;
-    QString ffmpegPath = buildPath + "/ffmpeg";
+    qDebug() << "=== 程序当前期待 ffmpeg 的路径为 ===";
+    qDebug() << "qt environment path: " << qEnvironmentVariable("PATH");
+    QString ffmpegPath = QStandardPaths::findExecutable("ffmpeg", { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" });
+
+    if (ffmpegPath.isEmpty()) {
+
+        qWarning() << "ffmpeg not found in PATH";
+
+    } else {
+
+        qDebug() << "ffmpeg path:" << ffmpegPath;
+
+    }
 
     QProcess *process = new QProcess(this);
     process->start(ffmpegPath, QStringList() << "-version");
