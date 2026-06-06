@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
 //测试ffmpeg的版本以及调用路径
 void MainWindow::testFFmpeg(){
     QString buildPath = QCoreApplication::applicationDirPath();
-    qDebug() << "=== 程序当前期待 ffmpeg 的路径为 ===";
+    qDebug() << "=== 搜索 ffmpeg 路径 ===";
     qDebug() << "qt environment path: " << qEnvironmentVariable("PATH");
     QString ffmpegPath = QStandardPaths::findExecutable("ffmpeg", { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" });
 
