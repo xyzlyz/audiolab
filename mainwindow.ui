@@ -15,8 +15,11 @@
   </property>
   <property name="styleSheet">
    <string notr="true">#MainWindow {
-    background-color: #F5F5F7;
-}</string>
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                      stop:0 rgb(255, 255, 255), 
+                                      stop:1 rgb(255, 255, 204));
+}
+</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="To_audioextract">
