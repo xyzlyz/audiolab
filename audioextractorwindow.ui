@@ -13,6 +13,11 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">#AudioExtractorWindow {
+background-color: qradialgradient(spread:repeat, cx:0.5, cy:0.5, radius:0.1, fx:0.5, fy:0.5, stop:0 rgb(255, 255, 255), stop:0.497326 rgb(255, 255, 204), stop:1 rgb(255, 255, 255))
+}</string>
+  </property>
   <widget class="QPushButton" name="btnSelectVideo">
    <property name="geometry">
     <rect>
