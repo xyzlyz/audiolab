@@ -24,6 +24,8 @@ private slots:
 
     void on_To_ffmpeg_test_clicked();
 
+    void on_To_audiocut_clicked();
+
 private:
     Ui::MainWindow *ui;
     void testFFmpeg();
