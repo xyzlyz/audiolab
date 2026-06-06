@@ -79,3 +79,25 @@ void MainWindow::on_To_ffmpeg_test_clicked()
     testFFmpeg();
 }
 
+
+void MainWindow::on_To_audiocut_clicked()
+{
+    // 判断没有窗口则创建新窗口的实例
+    if (cutterWin == nullptr){
+        cutterWin = new audiocutterwindow();
+
+        // 设置当窗口关闭时，自动释放内存，防止内存泄漏
+        cutterWin->setAttribute(Qt::WA_DeleteOnClose);
+        //修改判断
+        connect(cutterWin, &QObject::destroyed, this, [=](){
+            cutterWin = nullptr;
+        });
+        //打开新窗口
+        cutterWin->show();
+
+    }
+    else {
+        cutterWin->raise();         // 把它提到窗口最上层
+    }
+}
+
