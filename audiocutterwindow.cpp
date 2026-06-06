@@ -3,16 +3,28 @@
 
 #include <QFileDialog>
 #include <QProcess>
-#include <QCoreApplication>
 #include <QDebug>
 #include <QStandardPaths>
+#include <QFileInfo>
+#include <QDir>
+#include <QTime>
+
+static QString timeToFfmpegString(const QTime &time)
+{
+    return time.toString("HH:mm:ss");
+}
 
 audiocutterwindow::audiocutterwindow(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::audiocutterwindow)
 {
     ui->setupUi(this);
-    setWindowTitle("音视频分离工具");
+    setWindowTitle("音频剪辑工具");
+
+    ui->timeEditStart->setDisplayFormat("HH:mm:ss");
+    ui->timeEditEnd->setDisplayFormat("HH:mm:ss");
+    ui->timeEditStart->setTime(QTime(0, 0, 0));
+    ui->timeEditEnd->setTime(QTime(0, 1, 0));
 }
 
 audiocutterwindow::~audiocutterwindow()
@@ -22,116 +34,121 @@ audiocutterwindow::~audiocutterwindow()
 
 void audiocutterwindow::on_btnSelectVideo_clicked()
 {
-    QString videoPath = QFileDialog::getOpenFileName(
+    QString audioPath = QFileDialog::getOpenFileName(
         this,
-        "选择要提取音频的视频",
-        "/Users/tanyixiao",
-        "视频文件 (*.mp4 *.mkv *.avi *.mov)"
+        "选择要剪辑的音频",
+        QDir::homePath(),
+        "音频文件 (*.mp3 *.wav *.aac *.m4a *.flac *.ogg);;所有文件 (*.*)"
         );
 
-    if (!videoPath.isEmpty()) {
-        ui->lineEditVideo->setText(videoPath);
+    if (!audioPath.isEmpty()) {
+        ui->lineEditVideo->setText(audioPath);
 
-        // 自动生成同名 mp3 路径
-        QString audioPath = videoPath;
-        int lastDot = audioPath.lastIndexOf('.');
-        if (lastDot != -1) {
-            audioPath.replace(lastDot, audioPath.length() - lastDot, ".mp3");
-        }
-        ui->lineEditAudio->setText(audioPath);
+        QFileInfo fileInfo(audioPath);
+        QString outputPath = fileInfo.absolutePath()
+                             + "/"
+                             + fileInfo.completeBaseName()
+                             + "_cut.mp3";
+        ui->lineEditAudio->setText(outputPath);
 
-        ui->txtLog->append("已选择视频: " + videoPath);
+        ui->txtLog->append("已选择音频: " + audioPath);
+        ui->txtLog->append("已自动生成输出路径: " + outputPath);
     }
-
 }
-
 
 void audiocutterwindow::on_btnExtractAudio_clicked()
 {
-    QString videoPath = ui->lineEditVideo->text();
-    QString audioPath = ui->lineEditAudio->text();
+    QString inputAudioPath = ui->lineEditVideo->text().trimmed();
+    QString outputAudioPath = ui->lineEditAudio->text().trimmed();
+    QTime startTime = ui->timeEditStart->time();
+    QTime endTime = ui->timeEditEnd->time();
 
-    //判断是否选择了视频文件
-    if (videoPath.isEmpty() || audioPath.isEmpty()) {
-        ui->txtLog->append("⚠️ 错误：请先选择音频文件！");
+    if (inputAudioPath.isEmpty() || outputAudioPath.isEmpty()) {
+        ui->txtLog->append("⚠️ 错误：请先选择输入音频文件和输出路径！");
         return;
     }
 
-    // 寻找ffmpeg的路径
-    QString ffmpegPath = QStandardPaths::findExecutable("ffmpeg", { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" });
+    if (!QFileInfo::exists(inputAudioPath)) {
+        ui->txtLog->append("⚠️ 错误：输入音频文件不存在！");
+        return;
+    }
+
+    if (startTime >= endTime) {
+        ui->txtLog->append("⚠️ 错误：结束时间必须晚于开始时间！");
+        return;
+    }
+
+    QString ffmpegPath = QStandardPaths::findExecutable(
+        "ffmpeg",
+        { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" }
+        );
 
     if (ffmpegPath.isEmpty()) {
-
-        qWarning() << "ffmpeg not found in PATH";
-
-    } else {
-
-        qDebug() << "ffmpeg path:" << ffmpegPath;
-
+        ui->txtLog->append("❌ 未找到 FFmpeg，请确认已安装并配置到 PATH。");
+        return;
     }
-    //--------寻找结束--------
 
-    ui->txtLog->append("🎬 寻路成功！FFmpeg 绝对路径：" + ffmpegPath);
-    ui->txtLog->append("🎬 开始提取音频，请稍候...");
+    QString startString = timeToFfmpegString(startTime);
+    QString endString = timeToFfmpegString(endTime);
+
+    ui->txtLog->append("🎬 FFmpeg 路径：" + ffmpegPath);
+    ui->txtLog->append("🎧 开始剪辑音频，请稍候...");
+    ui->txtLog->append("剪辑区间：" + startString + " ~ " + endString);
+
     QProcess *ffmpegProcess = new QProcess(this);
 
-    // 2. 组装参数
     QStringList arguments;
-    arguments << "-i" << videoPath
+    arguments << "-ss" << startString
+              << "-to" << endString
+              << "-i" << inputAudioPath
               << "-vn"
               << "-acodec" << "libmp3lame"
               << "-q:a" << "2"
               << "-y"
-              << audioPath;
+              << outputAudioPath;
 
-    // 💡 核心升级 1：把 FFmpeg 的实时标准错误输出流（FFmpeg 的所有进度日志默认都在标准错误流里）
-    // 绑定到我们的日志文本框中。这样它只要有一丁点动静，我们都能立刻看到！
-    connect(ffmpegProcess, &QProcess::readyReadStandardError, this, [=](){
+    connect(ffmpegProcess, &QProcess::readyReadStandardError, this, [=]() {
         QString errorOutput = QString::fromLocal8Bit(ffmpegProcess->readAllStandardError());
-        ui->txtLog->append(errorOutput); // 实时滚动打印 FFmpeg 的内部进度
+        // ui->txtLog->append(errorOutput);
     });
 
-    // 💡 核心升级 2：防止进程因为某些特殊原因死在那，监测它启动失败的信号
-    connect(ffmpegProcess, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
-        ui->txtLog->append( "❌ 进程启动时发生错误，代码: " + QString::number(error) );
-        ui->txtLog->append( "系统提示: " + ffmpegProcess->errorString() );
+    connect(ffmpegProcess, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error) {
+        ui->txtLog->append("❌ 进程启动时发生错误，代码: " + QString::number(error));
+        ui->txtLog->append("系统提示: " + ffmpegProcess->errorString());
     });
 
-    // 3. 启动后台进程
+    connect(ffmpegProcess,
+            QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this,
+            [=](int exitCode, QProcess::ExitStatus exitStatus) {
+                Q_UNUSED(exitStatus);
+                if (exitCode == 0) {
+                    ui->txtLog->append("\n🎉🎉🎉 音频剪辑成功！");
+                    ui->txtLog->append("文件保存在：" + outputAudioPath);
+                } else {
+                    ui->txtLog->append("\n❌ 剪辑失败，FFmpeg 退出码: " + QString::number(exitCode));
+                }
+                ffmpegProcess->deleteLater();
+            });
+
     ffmpegProcess->start(ffmpegPath, arguments);
-
-    // 4. 绑定结束信号
-    connect(ffmpegProcess, &QProcess::finished, this, [=](int exitCode){
-        if (exitCode == 0) {
-            ui->txtLog->append("\n🎉🎉🎉 音频提取成功！");
-            ui->txtLog->append("文件保存在：" + audioPath);
-        } else {
-            ui->txtLog->append("\n❌ 提取中止，FFmpeg 退出码: " + QString::number(exitCode));
-        }
-        ffmpegProcess->deleteLater();
-    });
 }
-
 
 void audiocutterwindow::on_audio_route_change_clicked()
 {
-    // 获取当前 lineEditAudio 中已经有的路径，作为打开对话框时的默认推荐位置
     QString defaultPath = ui->lineEditAudio->text();
 
-    // 如果目前还没有路径，就默认打开 Mac 的下载目录或用户目录
     if (defaultPath.isEmpty()) {
-        defaultPath = "~/output.mp3";
+        defaultPath = QDir::homePath() + "/output_cut.mp3";
     }
 
-    // 💡 弹出“保存文件”对话框
     QString customAudioPath = QFileDialog::getSaveFileName(
         this,
-        "选择音频保存位置",      // 对话框标题
-        defaultPath,            // 默认文件名和路径
-        "音频文件 (*.mp3)"       // 限制保存格式为 MP3
+        "选择剪辑后音频的保存位置",
+        defaultPath,
+        "MP3 音频 (*.mp3);;WAV 音频 (*.wav);;AAC 音频 (*.aac);;所有文件 (*.*)"
         );
 
-    // 如果用户没有点取消（即路径不为空），就把用户选的自定义路径更新到输入框里
     if (!customAudioPath.isEmpty()) {
         ui->lineEditAudio->setText(customAudioPath);
         ui->txtLog->append("📝 用户更改保存路径为: " + customAudioPath);
