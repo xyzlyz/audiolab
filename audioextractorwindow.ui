@@ -39,16 +39,6 @@
     <string>开始提取音频</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEditVideo">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>70</y>
-     <width>401</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QLineEdit" name="lineEditAudio">
    <property name="geometry">
     <rect>
