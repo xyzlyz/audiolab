@@ -17,14 +17,14 @@
    <widget class="QPushButton" name="To_audioextract">
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>490</x>
       <y>160</y>
-      <width>141</width>
-      <height>51</height>
+      <width>120</width>
+      <height>50</height>
      </rect>
     </property>
     <property name="text">
-     <string>进行视频的音频提取</string>
+     <string>批量提取音频</string>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -37,7 +37,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>欢迎使用sound_capturer</string>
+     <string>欢迎使用audiolab</string>
     </property>
    </widget>
    <widget class="QPushButton" name="To_ffmpeg_test">
@@ -63,17 +63,30 @@
      </rect>
     </property>
    </widget>
-   <widget class="QToolButton" name="To_audiocut">
+   <widget class="QPushButton" name="To_audiocut">
     <property name="geometry">
      <rect>
       <x>330</x>
       <y>160</y>
-      <width>151</width>
-      <height>41</height>
+      <width>120</width>
+      <height>50</height>
      </rect>
     </property>
     <property name="text">
      <string>剪辑</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>160</y>
+      <width>120</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>提取音频</string>
     </property>
    </widget>
   </widget>
@@ -83,7 +96,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>29</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>

@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "audioextractorwindow.h"
 #include "audiocutterwindow.h"
+#include "audioextractor1window.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -27,10 +28,13 @@ private slots:
 
     void on_To_audiocut_clicked();
 
+    void on_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     void testFFmpeg();
 
+    AudioExtractor1Window *extractor1Win = nullptr;
     AudioExtractorWindow *extractorWin = nullptr;
     audiocutterwindow * cutterWin = nullptr;
 };
