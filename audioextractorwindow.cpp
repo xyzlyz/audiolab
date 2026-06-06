@@ -7,6 +7,8 @@
 #include <QDebug>
 #include <QStandardPaths>
 #include <QFileInfo>
+#include <QThread>
+#include "batchextractorworker.h" // 记得引入刚才写的新头文件
 
 AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     : QWidget(parent)
@@ -14,6 +16,7 @@ AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
 {
     ui->setupUi(this);
     setWindowTitle("音视频分离工具");
+
 }
 
 AudioExtractorWindow::~AudioExtractorWindow()
@@ -23,25 +26,30 @@ AudioExtractorWindow::~AudioExtractorWindow()
 
 void AudioExtractorWindow::on_btnSelectVideo_clicked()
 {
-    QString videoPath = QFileDialog::getOpenFileName(
+    QStringList files = QFileDialog::getOpenFileNames(
         this,
-        "选择要提取音频的视频",
-        "/Users/tanyixiao",
-        "视频文件 (*.mp4 *.mkv *.avi *.mov)"
+        "选择要分离音频的视频文件（可多选）",
+        "",
+        "视频文件 (*.mp4 *.mkv *.avi *.mov *.flv)"
         );
 
-    if (!videoPath.isEmpty()) {
-        ui->lineEditVideo->setText(videoPath);
+    if (!files.isEmpty()) {
+        ui->listVideos->addItems(files); // 直接把选中的多个路径塞进列表
+        ui->txtLog->append(QString("📝 已添加 %1 个视频到待处理列表").arg(files.size()));
 
-        // 自动生成同名 mp3 路径
-        QString audioPath = videoPath;
-        int lastDot = audioPath.lastIndexOf('.');
-        if (lastDot != -1) {
-            audioPath.replace(lastDot, audioPath.length() - lastDot, ".mp3");
-        }
-        ui->lineEditAudio->setText(audioPath);
+        // 获取用户选择的第一个视频的绝对路径（例如：/Users/tanyixiao/Movies/test.mp4）
+        QString firstVideoPath = files.first();
 
-        ui->txtLog->append("已选择视频: " + videoPath);
+        // 使用 QFileInfo 分析这个路径
+        QFileInfo fileInfo(firstVideoPath);
+
+        // 提取出它所在的文件夹目录（例如：/Users/tanyixiao/Movies）
+        QString videoDir = fileInfo.absolutePath();
+
+        // 把这个目录自动设置到导出的 lineEditAudio 中
+        ui->lineEditAudio->setText(videoDir);
+
+        ui->txtLog->append("📁 已自动将导出目录同步为视频所在文件夹: " + videoDir);
     }
 
 }
@@ -49,108 +57,76 @@ void AudioExtractorWindow::on_btnSelectVideo_clicked()
 
 void AudioExtractorWindow::on_btnExtractAudio_clicked()
 {
-    QString videoPath = ui->lineEditVideo->text();
-    QString audioPath = ui->lineEditAudio->text();
+    // 1. 从你的 QListWidget 中读取所有被添加进来的视频路径
+    QStringList videoFiles;
+    for (int i = 0; i < ui->listVideos->count(); ++i) {
+        videoFiles << ui->listVideos->item(i)->text();
+    }
 
-    //判断是否选择了视频文件
-    if (videoPath.isEmpty() || audioPath.isEmpty()) {
-        ui->txtLog->append("⚠️ 错误：请先选择视频文件！");
+    QString outputDir = ui->lineEditAudio->text();
+
+    // 判断是否有效
+    if (videoFiles.isEmpty()) {
+        ui->txtLog->append("⚠️ 错误：请先往列表中添加视频文件！");
+        return;
+    }
+    if (outputDir.isEmpty()) {
+        ui->txtLog->append("⚠️ 错误：请选择音频输出目录！");
         return;
     }
 
-    // 寻找ffmpeg的路径
-    QString ffmpegPath = QStandardPaths::findExecutable("ffmpeg", { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" });
+    ui->txtLog->append(QString("🎬 开始批量处理，共 %1 个文件...").arg(videoFiles.size()));
+    ui->btnExtractAudio->setEnabled(false); // 禁用按钮防止重复点击
 
-    if (ffmpegPath.isEmpty()) {
-        ui->txtLog->append("❌ 未找到 FFmpeg，请确认已安装并配置到 PATH。");
-        qWarning() << "ffmpeg not found in PATH";
-        return;
-    } else {
-        qDebug() << "ffmpeg path:" << ffmpegPath;
-    }
-    //--------寻找结束--------
+    // 2. 创建标准的 Qt 多线程
+    QThread* thread = new QThread(this);
+    BatchExtractorWorker* worker = new BatchExtractorWorker(videoFiles, outputDir);
+    worker->moveToThread(thread);
 
-    ui->txtLog->append("🎬 寻路成功！FFmpeg 绝对路径：" + ffmpegPath);
-    ui->txtLog->append("🎬 开始提取音频，请稍候...");
-    QProcess *ffmpegProcess = new QProcess(this);
+    // 3. 核心连接：线程启动时，让 worker 开始工作
+    connect(thread, &QThread::started, worker, &BatchExtractorWorker::startBatchProcess);
 
-    // 2. 组装参数
-    QStringList arguments;
-    arguments << "-i" << videoPath
-              << "-vn"
-              << "-acodec" << "libmp3lame"
-              << "-q:a" << "2"
-              << "-y"
-              << audioPath;
+    // 4. 连接 Worker 传回来的信号，更新主界面的 UI
+    connect(worker, &BatchExtractorWorker::logMessage, ui->txtLog, &QTextEdit::append);
 
-    // 💡 核心升级 1：把 FFmpeg 的实时标准错误输出流（FFmpeg 的所有进度日志默认都在标准错误流里）
-    // 绑定到我们的日志文本框中。这样它只要有一丁点动静，我们都能立刻看到！
-    connect(ffmpegProcess, &QProcess::readyReadStandardError, this, [=](){
-        QString errorOutput = QString::fromLocal8Bit(ffmpegProcess->readAllStandardError());
-        //ui->txtLog->append(errorOutput); // 实时滚动打印 FFmpeg 的内部进度
+    connect(worker, &BatchExtractorWorker::progressUpdated, this, [=](int current, int total){
+        // 如果你有进度条（QProgressBar），可以在这里更新它
+        // ui->progressBar->setMaximum(total);
+        // ui->progressBar->setValue(current);
     });
 
-    // 💡 核心升级 2：防止进程因为某些特殊原因死在那，监测它启动失败的信号
-    connect(ffmpegProcess, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
-        ui->txtLog->append( "❌ 进程启动时发生错误，代码: " + QString::number(error) );
-        ui->txtLog->append( "系统提示: " + ffmpegProcess->errorString() );
+    // 5. 结束后自动清理线程和内存，恢复按钮状态
+    connect(worker, &BatchExtractorWorker::finishedAll, this, [=](){
+        ui->btnExtractAudio->setEnabled(true); // 恢复按钮
     });
 
-    // 3. 启动后台进程
-    ffmpegProcess->start(ffmpegPath, arguments);
+    // 这三行是 Qt 线程安全销毁的标准公式：
+    connect(worker, &BatchExtractorWorker::finishedAll, thread, &QThread::quit);
+    connect(worker, &BatchExtractorWorker::finishedAll, worker, &BatchExtractorWorker::deleteLater);
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
-    // 4. 绑定结束信号
-    connect(ffmpegProcess,
-            QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this,
-            [=](int exitCode, QProcess::ExitStatus exitStatus) {
-                Q_UNUSED(exitStatus);
-
-                if (exitCode == 0) {
-                    ui->txtLog->append("\n🎉🎉🎉 音频提取成功！");
-                    ui->txtLog->append("文件保存在：" + audioPath);
-
-                    if (ui->checkBox->isChecked()) {
-                        ui->txtLog->append("已勾选分离后进入音频剪辑，正在打开剪辑窗口...");
-
-                        audiocutterwindow *cutterWin = new audiocutterwindow();
-                        cutterWin->setAttribute(Qt::WA_DeleteOnClose);
-                        cutterWin->setInputAudioPath(audioPath);
-                        cutterWin->show();
-
-                        this->close();
-                    }
-                } else {
-                    ui->txtLog->append("\n❌ 提取中止，FFmpeg 退出码: " + QString::number(exitCode));
-                }
-
-                ffmpegProcess->deleteLater();
-            });
+    // 6. 线程启动
+    thread->start();
 }
 
 
 void AudioExtractorWindow::on_audio_route_change_clicked()
 {
-    // 获取当前 lineEditAudio 中已经有的路径，作为打开对话框时的默认推荐位置
     QString defaultPath = ui->lineEditAudio->text();
-
-    // 如果目前还没有路径，就默认打开 Mac 的下载目录或用户目录
     if (defaultPath.isEmpty()) {
-        defaultPath = "/Users/tanyixiao/Downloads/output.mp3";
+        defaultPath = "/Users/tanyixiao/Downloads";
     }
 
-    // 💡 弹出“保存文件”对话框
-    QString customAudioPath = QFileDialog::getSaveFileName(
+    // 💡 弹出“选择文件夹”对话框
+    QString customDir = QFileDialog::getExistingDirectory(
         this,
-        "选择音频保存位置",      // 对话框标题
-        defaultPath,            // 默认文件名和路径
-        "音频文件 (*.mp3)"       // 限制保存格式为 MP3
+        "选择音频批量输出目录",
+        defaultPath
         );
 
-    // 如果用户没有点取消（即路径不为空），就把用户选的自定义路径更新到输入框里
-    if (!customAudioPath.isEmpty()) {
-        ui->lineEditAudio->setText(customAudioPath);
-        ui->txtLog->append("📝 用户更改保存路径为: " + customAudioPath);
+    if (!customDir.isEmpty()) {
+        ui->lineEditAudio->setText(customDir); // 此时 lineEditAudio 存的是目录路径了
+        ui->txtLog->append("📝 批量输出目录更改为: " + customDir);
     }
 }
 
