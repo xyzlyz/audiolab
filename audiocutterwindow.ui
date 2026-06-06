@@ -177,7 +177,7 @@
     <string>音频剪辑进程</string>
    </property>
   </widget>
-  <widget class="QTextEdit" name="txtLog">
+  <widget class="QTextBrowser" name="txtLog">
    <property name="geometry">
     <rect>
      <x>40</x>

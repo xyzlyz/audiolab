@@ -53,7 +53,7 @@
      <string>测试ffmpeg</string>
     </property>
    </widget>
-   <widget class="QTextEdit" name="textEdit">
+   <widget class="QTextBrowser" name="textLog">
     <property name="geometry">
      <rect>
       <x>40</x>
@@ -83,7 +83,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>29</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>
