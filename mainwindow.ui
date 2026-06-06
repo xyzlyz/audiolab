@@ -13,11 +13,16 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">#MainWindow {
+    background-color: #F5F5F7;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="To_audioextract">
     <property name="geometry">
      <rect>
-      <x>500</x>
+      <x>520</x>
       <y>160</y>
       <width>120</width>
       <height>50</height>
@@ -30,9 +35,9 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>340</x>
+      <x>350</x>
       <y>60</y>
-      <width>171</width>
+      <width>111</width>
       <height>31</height>
      </rect>
     </property>
@@ -56,8 +61,8 @@
    <widget class="QTextBrowser" name="textLog">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>360</y>
+      <x>280</x>
+      <y>370</y>
       <width>241</width>
       <height>51</height>
      </rect>
@@ -92,9 +97,9 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>260</y>
-      <width>331</width>
+      <x>260</x>
+      <y>270</y>
+      <width>271</width>
       <height>16</height>
      </rect>
     </property>
@@ -106,6 +111,29 @@
     </property>
     <property name="textInteractionFlags">
      <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>440</y>
+      <width>291</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">
+QLabel#label_3 {
+    color: #8E8E93;
+    font-size: 12px; 
+}</string>
+    </property>
+    <property name="text">
+     <string>提示：本应用基于ffmpeg开发，如果出现了问题可以通过“测试ffmpeg”按钮检查ffmpeg情况。如果显示“调用成功”字样，说明ffmpeg配置成功。否则说明配置出错。</string>
+    </property>
+    <property name="wordWrap">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
