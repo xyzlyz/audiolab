@@ -121,6 +121,19 @@
     <string>音频分离进程</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="checkBox">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>350</y>
+     <width>121</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>提取后进行剪辑</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

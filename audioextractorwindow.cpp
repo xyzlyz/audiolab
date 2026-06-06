@@ -1,12 +1,12 @@
 #include "audioextractorwindow.h"
 #include "ui_audioextractorwindow.h"
-#include "audioextractorwindow.h"
-#include "ui_audioextractorwindow.h"
+#include "audiocutterwindow.h"
 #include <QFileDialog>
 #include <QProcess>
 #include <QCoreApplication>
 #include <QDebug>
 #include <QStandardPaths>
+#include <QFileInfo>
 
 AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     : QWidget(parent)
@@ -62,13 +62,11 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     QString ffmpegPath = QStandardPaths::findExecutable("ffmpeg", { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" });
 
     if (ffmpegPath.isEmpty()) {
-
+        ui->txtLog->append("❌ 未找到 FFmpeg，请确认已安装并配置到 PATH。");
         qWarning() << "ffmpeg not found in PATH";
-
+        return;
     } else {
-
         qDebug() << "ffmpeg path:" << ffmpegPath;
-
     }
     //--------寻找结束--------
 
@@ -102,15 +100,32 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     ffmpegProcess->start(ffmpegPath, arguments);
 
     // 4. 绑定结束信号
-    connect(ffmpegProcess, &QProcess::finished, this, [=](int exitCode){
-        if (exitCode == 0) {
-            ui->txtLog->append("\n🎉🎉🎉 音频提取成功！");
-            ui->txtLog->append("文件保存在：" + audioPath);
-        } else {
-            ui->txtLog->append("\n❌ 提取中止，FFmpeg 退出码: " + QString::number(exitCode));
-        }
-        ffmpegProcess->deleteLater();
-    });
+    connect(ffmpegProcess,
+            QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this,
+            [=](int exitCode, QProcess::ExitStatus exitStatus) {
+                Q_UNUSED(exitStatus);
+
+                if (exitCode == 0) {
+                    ui->txtLog->append("\n🎉🎉🎉 音频提取成功！");
+                    ui->txtLog->append("文件保存在：" + audioPath);
+
+                    if (ui->checkBox->isChecked()) {
+                        ui->txtLog->append("已勾选分离后进入音频剪辑，正在打开剪辑窗口...");
+
+                        audiocutterwindow *cutterWin = new audiocutterwindow();
+                        cutterWin->setAttribute(Qt::WA_DeleteOnClose);
+                        cutterWin->setInputAudioPath(audioPath);
+                        cutterWin->show();
+
+                        this->close();
+                    }
+                } else {
+                    ui->txtLog->append("\n❌ 提取中止，FFmpeg 退出码: " + QString::number(exitCode));
+                }
+
+                ffmpegProcess->deleteLater();
+            });
 }
 
 

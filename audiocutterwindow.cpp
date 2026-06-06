@@ -32,6 +32,26 @@ audiocutterwindow::~audiocutterwindow()
     delete ui;
 }
 
+void audiocutterwindow::setInputAudioPath(const QString &audioPath)
+{
+    QString trimmedPath = audioPath.trimmed();
+    if (trimmedPath.isEmpty()) {
+        return;
+    }
+
+    ui->lineEditVideo->setText(trimmedPath);
+
+    QFileInfo fileInfo(trimmedPath);
+    QString outputPath = fileInfo.absolutePath()
+                         + "/"
+                         + fileInfo.completeBaseName()
+                         + "_cut.mp3";
+    ui->lineEditAudio->setText(outputPath);
+
+    ui->txtLog->append("已自动载入待剪辑音频: " + trimmedPath);
+    ui->txtLog->append("已自动生成剪辑输出路径: " + outputPath);
+}
+
 void audiocutterwindow::on_btnSelectVideo_clicked()
 {
     QString audioPath = QFileDialog::getOpenFileName(

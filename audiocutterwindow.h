@@ -15,6 +15,9 @@ public:
     explicit audiocutterwindow(QWidget *parent = nullptr);
     ~audiocutterwindow();
 
+    // 外部窗口可调用：设置待剪辑音频，并自动生成默认输出路径
+    void setInputAudioPath(const QString &audioPath);
+
 private slots:
     void on_btnSelectVideo_clicked();
 
