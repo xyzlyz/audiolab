@@ -13,11 +13,16 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">#MainWindow {
+    background-color: #F5F5F7;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="To_audioextract">
     <property name="geometry">
      <rect>
-      <x>490</x>
+      <x>520</x>
       <y>160</y>
       <width>120</width>
       <height>50</height>
@@ -30,9 +35,9 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>360</x>
+      <x>350</x>
       <y>60</y>
-      <width>171</width>
+      <width>111</width>
       <height>31</height>
      </rect>
     </property>
@@ -43,8 +48,8 @@
    <widget class="QPushButton" name="To_ffmpeg_test">
     <property name="geometry">
      <rect>
-      <x>100</x>
-      <y>230</y>
+      <x>350</x>
+      <y>330</y>
       <width>100</width>
       <height>32</height>
      </rect>
@@ -56,8 +61,8 @@
    <widget class="QTextBrowser" name="textLog">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>270</y>
+      <x>280</x>
+      <y>370</y>
       <width>241</width>
       <height>51</height>
      </rect>
@@ -66,7 +71,7 @@
    <widget class="QPushButton" name="To_audiocut">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>340</x>
       <y>160</y>
       <width>120</width>
       <height>50</height>
@@ -87,6 +92,48 @@
     </property>
     <property name="text">
      <string>提取音频</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>270</y>
+      <width>271</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>温馨提示：推荐使用 &lt;a href='https://github.com/zhuozhiyongde/PKU-Art?tab=readme-ov-file#-安装' style='color: #007AFF; font-weight: bold;'&gt;pku_art&lt;/a&gt; 下载教学网视频。</string>
+    </property>
+    <property name="openExternalLinks">
+     <bool>true</bool>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>440</y>
+      <width>291</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">
+QLabel#label_3 {
+    color: #8E8E93;
+    font-size: 12px; 
+}</string>
+    </property>
+    <property name="text">
+     <string>提示：本应用基于ffmpeg开发，如果出现了问题可以通过“测试ffmpeg”按钮检查ffmpeg情况。如果显示“调用成功”字样，说明ffmpeg配置成功。否则说明配置出错。</string>
+    </property>
+    <property name="wordWrap">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
