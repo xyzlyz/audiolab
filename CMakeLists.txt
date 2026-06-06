@@ -18,6 +18,7 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        app.qrc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -51,6 +52,19 @@ endif()
 
 target_link_libraries(sound_capturer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt6::Multimedia)
 
+
+# Application icons
+if(WIN32)
+    target_sources(sound_capturer PRIVATE appicon.rc)
+endif()
+
+if(APPLE)
+    set(MACOSX_BUNDLE_ICON_FILE appicon.icns)
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/appicon.icns PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources")
+    target_sources(sound_capturer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/appicon.icns)
+endif()
+
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
@@ -63,6 +77,7 @@ set_target_properties(sound_capturer PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE_ICON_FILE ${MACOSX_BUNDLE_ICON_FILE}
 )
 
 include(GNUInstallDirs)
