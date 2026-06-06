@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "audioextractorwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,5 +27,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     void testFFmpeg();
+
+    AudioExtractorWindow *extractorWin = nullptr;
 };
 #endif // MAINWINDOW_H

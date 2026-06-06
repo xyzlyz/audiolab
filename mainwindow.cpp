@@ -53,14 +53,24 @@ MainWindow::~MainWindow()
 //转到音频提取窗口
 void MainWindow::on_To_audioextract_clicked()
 {
-    // 创建新窗口的实例（加上 this，让主窗口作为其父组件管理内存）
-    AudioExtractorWindow *extractorWin = new AudioExtractorWindow();
+    // 判断没有窗口则创建新窗口的实例
+    if (extractorWin == nullptr){
+        extractorWin = new AudioExtractorWindow();
 
-    // 设置当窗口关闭时，自动释放内存，防止内存泄漏
-    extractorWin->setAttribute(Qt::WA_DeleteOnClose);
+        // 设置当窗口关闭时，自动释放内存，防止内存泄漏
+        extractorWin->setAttribute(Qt::WA_DeleteOnClose);
+        //修改判断
+        connect(extractorWin, &QObject::destroyed, this, [=](){
+            extractorWin = nullptr;
+        });
+        //打开新窗口
+        extractorWin->show();
 
-    //打开新窗口
-    extractorWin->show();
+    }
+    else {
+        extractorWin->raise();         // 把它提到窗口最上层
+    }
+
 }
 //测试ffmpeg的版本
 void MainWindow::on_To_ffmpeg_test_clicked()

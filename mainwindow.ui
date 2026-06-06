@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="To_audioextract">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>160</x>
       <y>160</y>
       <width>141</width>
       <height>51</height>
@@ -30,7 +30,7 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>360</x>
       <y>60</y>
       <width>171</width>
       <height>31</height>
@@ -43,14 +43,24 @@
    <widget class="QPushButton" name="To_ffmpeg_test">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>220</y>
+      <x>100</x>
+      <y>230</y>
       <width>100</width>
       <height>32</height>
      </rect>
     </property>
     <property name="text">
      <string>测试ffmpeg</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>270</y>
+      <width>241</width>
+      <height>131</height>
+     </rect>
     </property>
    </widget>
   </widget>
