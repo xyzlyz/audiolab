@@ -15,6 +15,13 @@ public:
     explicit audiocutterwindow(QWidget *parent = nullptr);
     ~audiocutterwindow();
 
+private slots:
+    void on_btnSelectVideo_clicked();
+
+    void on_btnExtractAudio_clicked();
+
+    void on_audio_route_change_clicked();
+
 private:
     Ui::audiocutterwindow *ui;
 };
