@@ -20,6 +20,8 @@ private slots:
 
     void on_btnExtractAudio_clicked();
 
+    void on_audio_route_change_clicked();
+
 private:
     Ui::AudioExtractorWindow *ui;
 };

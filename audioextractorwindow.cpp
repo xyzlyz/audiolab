@@ -113,3 +113,29 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     });
 }
 
+
+void AudioExtractorWindow::on_audio_route_change_clicked()
+{
+    // 获取当前 lineEditAudio 中已经有的路径，作为打开对话框时的默认推荐位置
+    QString defaultPath = ui->lineEditAudio->text();
+
+    // 如果目前还没有路径，就默认打开 Mac 的下载目录或用户目录
+    if (defaultPath.isEmpty()) {
+        defaultPath = "/Users/tanyixiao/Downloads/output.mp3";
+    }
+
+    // 💡 弹出“保存文件”对话框
+    QString customAudioPath = QFileDialog::getSaveFileName(
+        this,
+        "选择音频保存位置",      // 对话框标题
+        defaultPath,            // 默认文件名和路径
+        "音频文件 (*.mp3)"       // 限制保存格式为 MP3
+        );
+
+    // 如果用户没有点取消（即路径不为空），就把用户选的自定义路径更新到输入框里
+    if (!customAudioPath.isEmpty()) {
+        ui->lineEditAudio->setText(customAudioPath);
+        ui->txtLog->append("📝 用户更改保存路径为: " + customAudioPath);
+    }
+}
+
