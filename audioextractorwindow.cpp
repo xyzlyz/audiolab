@@ -89,7 +89,7 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     // 绑定到我们的日志文本框中。这样它只要有一丁点动静，我们都能立刻看到！
     connect(ffmpegProcess, &QProcess::readyReadStandardError, this, [=](){
         QString errorOutput = QString::fromLocal8Bit(ffmpegProcess->readAllStandardError());
-        ui->txtLog->append(errorOutput); // 实时滚动打印 FFmpeg 的内部进度
+        //ui->txtLog->append(errorOutput); // 实时滚动打印 FFmpeg 的内部进度
     });
 
     // 💡 核心升级 2：防止进程因为某些特殊原因死在那，监测它启动失败的信号

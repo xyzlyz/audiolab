@@ -37,10 +37,12 @@ void MainWindow::testFFmpeg(){
 
     if (process->waitForFinished(3000)) {
         QString output = QString::fromLocal8Bit(process->readAllStandardOutput());
-        qDebug() << "======= FFMPEG 联调成功！=======";
-        qDebug() << output.left(300);
+        ui->textEdit->clear();
+        ui->textEdit->append("=== FFMPEG 联调成功！===");
+        qDebug() <<output.left(300);
     } else {
-        qDebug() << "======= FFMPEG 调用失败！=======";
+        ui->textEdit->append("======= FFMPEG 调用失败！=======");
+
         qDebug() << "错误代码:" << process->error();
         qDebug() << "系统提示:" << process->errorString();
     }
