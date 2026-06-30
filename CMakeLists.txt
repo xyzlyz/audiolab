@@ -31,6 +31,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         audioextractor1window.cpp
         audioextractor1window.h
         audioextractor1window.ui
+        silencecut.h silencecut.cpp silencecut.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET sound_capturer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

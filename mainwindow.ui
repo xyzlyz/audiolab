@@ -27,8 +27,8 @@
    <widget class="QPushButton" name="To_audioextract">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>160</y>
+      <x>370</x>
+      <y>170</y>
       <width>120</width>
       <height>50</height>
      </rect>
@@ -76,8 +76,8 @@
    <widget class="QPushButton" name="To_audiocut">
     <property name="geometry">
      <rect>
-      <x>340</x>
-      <y>160</y>
+      <x>210</x>
+      <y>170</y>
       <width>120</width>
       <height>50</height>
      </rect>
@@ -89,8 +89,8 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>160</y>
+      <x>50</x>
+      <y>170</y>
       <width>120</width>
       <height>50</height>
      </rect>
@@ -141,6 +141,19 @@ QLabel#label_3 {
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="QPushButton" name="scut">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>170</y>
+      <width>131</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>静音提取</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -148,7 +161,7 @@ QLabel#label_3 {
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>29</height>
     </rect>
    </property>
   </widget>

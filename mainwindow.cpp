@@ -7,12 +7,33 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "audioextractorwindow.h"
+#include "silencecut.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    // 全局按钮样式，所有窗口按钮共用
+    this->setStyleSheet(R"(
+        QPushButton {
+            background-color: #ecf5c4;
+            color: black;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 13px;
+            box-shadow: 0 3px 4px rgba(0,0,0,0.25);
+        }
+        QPushButton:hover {
+            background-color: #bdc791;
+            box-shadow: 0 4px 5px rgba(0,0,0,0.3);
+        }
+        QPushButton:pressed {
+            background-color: #858f57;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transform: translateY(2px);
+        }
+    )");
 
 }
 //测试ffmpeg的版本以及调用路径
@@ -124,5 +145,27 @@ void MainWindow::on_pushButton_clicked()
         extractor1Win->raise();         // 把它提到窗口最上层
     }
 
+}
+
+
+void MainWindow::on_scut_clicked()
+{
+    // 判断没有窗口则创建新窗口的实例
+    if (silencecutWin == nullptr){
+        silencecutWin = new silencecut();
+
+        // 设置当窗口关闭时，自动释放内存，防止内存泄漏
+        silencecutWin->setAttribute(Qt::WA_DeleteOnClose);
+        //修改判断
+        connect(silencecutWin, &QObject::destroyed, this, [=](){
+            silencecutWin = nullptr;
+        });
+        //打开新窗口
+        silencecutWin->show();
+
+    }
+    else {
+        silencecutWin->raise();         // 把它提到窗口最上层
+    }
 }
 
