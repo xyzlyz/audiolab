@@ -53,6 +53,9 @@ background-color: qradialgradient(spread:repeat, cx:0.5, cy:0.5, radius:0.1, fx:
      <height>21</height>
     </rect>
    </property>
+   <property name="readOnly">
+    <bool>true</bool>
+   </property>
   </widget>
   <widget class="QLineEdit" name="lineEditAudio">
    <property name="geometry">
@@ -62,6 +65,9 @@ background-color: qradialgradient(spread:repeat, cx:0.5, cy:0.5, radius:0.1, fx:
      <width>391</width>
      <height>21</height>
     </rect>
+   </property>
+   <property name="readOnly">
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QLabel" name="label">

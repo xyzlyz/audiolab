@@ -39,7 +39,7 @@
     <string>请选择音频</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="input_adress">
+  <widget class="QLineEdit" name="input_address">
    <property name="geometry">
     <rect>
      <x>80</x>
@@ -47,6 +47,9 @@
      <width>381</width>
      <height>21</height>
     </rect>
+   </property>
+   <property name="readOnly">
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
@@ -66,7 +69,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>200</y>
+     <y>170</y>
      <width>58</width>
      <height>16</height>
     </rect>
@@ -75,21 +78,24 @@
     <string>输出路径：</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="output_adress">
+  <widget class="QLineEdit" name="output_address">
    <property name="geometry">
     <rect>
      <x>80</x>
-     <y>200</y>
+     <y>170</y>
      <width>381</width>
      <height>21</height>
     </rect>
    </property>
+   <property name="readOnly">
+    <bool>true</bool>
+   </property>
   </widget>
-  <widget class="QPushButton" name="output_adress_select">
+  <widget class="QPushButton" name="output_address_select">
    <property name="geometry">
     <rect>
      <x>480</x>
-     <y>200</y>
+     <y>170</y>
      <width>41</width>
      <height>32</height>
     </rect>
@@ -101,14 +107,27 @@
   <widget class="QPushButton" name="start_cutting">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>280</y>
+     <x>210</x>
+     <y>210</y>
      <width>100</width>
      <height>32</height>
     </rect>
    </property>
    <property name="text">
     <string>一键分割</string>
+   </property>
+  </widget>
+  <widget class="QTextEdit" name="TextLog">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>270</y>
+     <width>381</width>
+     <height>121</height>
+    </rect>
+   </property>
+   <property name="readOnly">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>
