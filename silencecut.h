@@ -15,6 +15,9 @@ public:
     explicit silencecut(QWidget *parent = nullptr);
     ~silencecut();
 
+private slots:
+    void on_audio_select_botton_clicked();
+
 private:
     Ui::silencecut *ui;
 };

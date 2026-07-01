@@ -15,7 +15,7 @@ AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     , ui(new Ui::AudioExtractorWindow)
 {
     ui->setupUi(this);
-    setWindowTitle("音视频分离工具");
+    setWindowTitle("批量音视频分离工具");
 
 }
 
