@@ -26,7 +26,7 @@ void AudioExtractor1Window::on_btnSelectVideo_clicked()
     QString videoPath = QFileDialog::getOpenFileName(
         this,
         "选择要提取音频的视频",
-        "/Users/tanyixiao",
+        "",
         "视频文件 (*.mp4 *.mkv *.avi *.mov)"
         );
 
@@ -54,7 +54,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
 
     //判断是否选择了视频文件
     if (videoPath.isEmpty() || audioPath.isEmpty()) {
-        ui->txtLog->append("⚠️ 错误：请先选择视频文件！");
+        ui->txtLog->append(" 错误：请先选择视频文件！");
         return;
     }
 
@@ -62,7 +62,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
     QString ffmpegPath = QStandardPaths::findExecutable("ffmpeg", { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" });
 
     if (ffmpegPath.isEmpty()) {
-        ui->txtLog->append("❌ 未找到 FFmpeg，请确认已安装并配置到 PATH。");
+        ui->txtLog->append("未找到 FFmpeg，请确认已安装并配置到 PATH。");
         qWarning() << "ffmpeg not found in PATH";
         return;
     } else {
@@ -70,8 +70,8 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
     }
     //--------寻找结束--------
 
-    ui->txtLog->append("🎬 寻路成功！FFmpeg 绝对路径：" + ffmpegPath);
-    ui->txtLog->append("🎬 开始提取音频，请稍候...");
+    ui->txtLog->append("寻路成功！FFmpeg 绝对路径：" + ffmpegPath);
+    ui->txtLog->append("开始提取音频，请稍候...");
     QProcess *ffmpegProcess = new QProcess(this);
 
     // 2. 组装参数
@@ -83,23 +83,23 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
               << "-y"
               << audioPath;
 
-    // 💡 核心升级 1：把 FFmpeg 的实时标准错误输出流（FFmpeg 的所有进度日志默认都在标准错误流里）
+    // 把 FFmpeg 的实时标准错误输出流（FFmpeg 的所有进度日志默认都在标准错误流里）
     // 绑定到我们的日志文本框中。这样它只要有一丁点动静，我们都能立刻看到！
     connect(ffmpegProcess, &QProcess::readyReadStandardError, this, [=](){
         QString errorOutput = QString::fromLocal8Bit(ffmpegProcess->readAllStandardError());
         //ui->txtLog->append(errorOutput); // 实时滚动打印 FFmpeg 的内部进度
     });
 
-    // 💡 核心升级 2：防止进程因为某些特殊原因死在那，监测它启动失败的信号
+    // 防止进程因为某些特殊原因死在那，监测它启动失败的信号
     connect(ffmpegProcess, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
-        ui->txtLog->append( "❌ 进程启动时发生错误，代码: " + QString::number(error) );
+        ui->txtLog->append( "进程启动时发生错误，代码: " + QString::number(error) );
         ui->txtLog->append( "系统提示: " + ffmpegProcess->errorString() );
     });
 
-    // 3. 启动后台进程
+    // 启动后台进程
     ffmpegProcess->start(ffmpegPath, arguments);
 
-    // 4. 绑定结束信号
+    // 绑定结束信号
     connect(ffmpegProcess,
             QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this,
@@ -121,7 +121,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
                         this->close();
                     }
                 } else {
-                    ui->txtLog->append("\n❌ 提取中止，FFmpeg 退出码: " + QString::number(exitCode));
+                    ui->txtLog->append("提取中止，FFmpeg 退出码: " + QString::number(exitCode));
                 }
 
                 ffmpegProcess->deleteLater();

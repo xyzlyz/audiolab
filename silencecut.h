@@ -1,5 +1,8 @@
 #ifndef SILENCECUT_H
 #define SILENCECUT_H
+#include <QProcess>
+#include <QRegularExpression>
+#include <QVector>
 
 #include <QWidget>
 
@@ -18,8 +21,20 @@ public:
 private slots:
     void on_audio_select_botton_clicked();
 
+    void on_output_address_select_clicked();
+
+    void on_start_cutting_clicked();
+
+    void onCaptureSilenceLog();
+
+    void onDetectFinished(int exitCode);
+
+    void startActualCutting();
+
 private:
     Ui::silencecut *ui;
+    QProcess *detectProcess = nullptr;
+    QVector<double> silenceStartPoints;
 };
 
 #endif // SILENCECUT_H
