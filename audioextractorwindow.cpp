@@ -8,7 +8,7 @@
 #include <QStandardPaths>
 #include <QFileInfo>
 #include <QThread>
-#include "batchextractorworker.h" // 记得引入刚才写的新头文件
+#include "batchextractorworker.h"
 
 AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     : QWidget(parent)
@@ -37,13 +37,13 @@ void AudioExtractorWindow::on_btnSelectVideo_clicked()
         ui->listVideos->addItems(files); // 直接把选中的多个路径塞进列表
         ui->txtLog->append(QString("📝 已添加 %1 个视频到待处理列表").arg(files.size()));
 
-        // 获取用户选择的第一个视频的绝对路径（例如：/Users/tanyixiao/Movies/test.mp4）
+        // 获取用户选择的第一个视频的绝对路径
         QString firstVideoPath = files.first();
 
         // 使用 QFileInfo 分析这个路径
         QFileInfo fileInfo(firstVideoPath);
 
-        // 提取出它所在的文件夹目录（例如：/Users/tanyixiao/Movies）
+        // 提取出它所在的文件夹目录
         QString videoDir = fileInfo.absolutePath();
 
         // 把这个目录自动设置到导出的 lineEditAudio 中
@@ -57,7 +57,7 @@ void AudioExtractorWindow::on_btnSelectVideo_clicked()
 
 void AudioExtractorWindow::on_btnExtractAudio_clicked()
 {
-    // 1. 从你的 QListWidget 中读取所有被添加进来的视频路径
+    //读取所有被添加进来的视频路径
     QStringList videoFiles;
     for (int i = 0; i < ui->listVideos->count(); ++i) {
         videoFiles << ui->listVideos->item(i)->text();
@@ -78,34 +78,31 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     ui->txtLog->append(QString("🎬 开始批量处理，共 %1 个文件...").arg(videoFiles.size()));
     ui->btnExtractAudio->setEnabled(false); // 禁用按钮防止重复点击
 
-    // 2. 创建标准的 Qt 多线程
+    // 创建 Qt 多线程
     QThread* thread = new QThread(this);
     BatchExtractorWorker* worker = new BatchExtractorWorker(videoFiles, outputDir);
     worker->moveToThread(thread);
 
-    // 3. 核心连接：线程启动时，让 worker 开始工作
+    // 线程启动时，让 worker 开始工作
     connect(thread, &QThread::started, worker, &BatchExtractorWorker::startBatchProcess);
 
-    // 4. 连接 Worker 传回来的信号，更新主界面的 UI
+    // 更新主界面的 UI
     connect(worker, &BatchExtractorWorker::logMessage, ui->txtLog, &QTextEdit::append);
 
     connect(worker, &BatchExtractorWorker::progressUpdated, this, [=](int current, int total){
-        // 如果你有进度条（QProgressBar），可以在这里更新它
-        // ui->progressBar->setMaximum(total);
-        // ui->progressBar->setValue(current);
     });
 
-    // 5. 结束后自动清理线程和内存，恢复按钮状态
+    // 结束后自动清理线程和内存，恢复按钮状态
     connect(worker, &BatchExtractorWorker::finishedAll, this, [=](){
         ui->btnExtractAudio->setEnabled(true); // 恢复按钮
     });
 
-    // 这三行是 Qt 线程安全销毁的标准公式：
+    // 销毁线程
     connect(worker, &BatchExtractorWorker::finishedAll, thread, &QThread::quit);
     connect(worker, &BatchExtractorWorker::finishedAll, worker, &BatchExtractorWorker::deleteLater);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
-    // 6. 线程启动
+    // 线程启动
     thread->start();
 }
 
@@ -117,7 +114,6 @@ void AudioExtractorWindow::on_audio_route_change_clicked()
         defaultPath = "/Users/tanyixiao/Downloads";
     }
 
-    // 💡 弹出“选择文件夹”对话框
     QString customDir = QFileDialog::getExistingDirectory(
         this,
         "选择音频批量输出目录",

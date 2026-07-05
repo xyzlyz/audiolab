@@ -13,7 +13,7 @@ void BatchExtractorWorker::startBatchProcess()
         return;
     }
 
-    // 寻找ffmpeg的路径（从你原代码搬过来的寻路逻辑）
+    // 寻找ffmpeg的路径
     QString ffmpegPath = QStandardPaths::findExecutable("ffmpeg", { "/usr/local/bin", "/opt/homebrew/bin", "C:/ffmpeg/bin" });
     if (ffmpegPath.isEmpty()) {
         emit logMessage("❌ 错误：未找到 FFmpeg 绝对路径，无法开始转换！");
@@ -35,10 +35,10 @@ void BatchExtractorWorker::startBatchProcess()
         emit logMessage(QString("🎬 [%1/%2] 开始提取：%3").arg(i + 1).arg(totalFiles).arg(videoInfo.fileName()));
         emit progressUpdated(i, totalFiles);
 
-        // 创建进程（注意：子线程中不需要指定 this 指针）
+        // 创建进程
         QProcess *ffmpegProcess = new QProcess();
 
-        // 组装参数（搬运你的原版参数）
+        // 组装参数
         QStringList arguments;
         arguments << "-i" << videoPath
                   << "-vn"
@@ -47,10 +47,8 @@ void BatchExtractorWorker::startBatchProcess()
                   << "-y"
                   << audioPath;
 
-        // 绑定错误和日志信号（通过发射信号通知主线程，子线程绝不能直接操作 UI）
+        // 绑定错误和日志信号
         connect(ffmpegProcess, &QProcess::readyReadStandardError, this, [=](){
-            // 如果你想看详细进度，可以解开下面这行的信号
-            // emit logMessage(QString::fromLocal8Bit(ffmpegProcess->readAllStandardError()));
         });
 
         connect(ffmpegProcess, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
@@ -60,8 +58,6 @@ void BatchExtractorWorker::startBatchProcess()
         // 启动进程
         ffmpegProcess->start(ffmpegPath, arguments);
 
-        // 💡 核心改变：子线程中同步等待它做完，再走下一个循环
-        // -1 表示死等直到做完，这样文件就会一个接一个排队处理
         ffmpegProcess->waitForFinished(-1);
 
         if (ffmpegProcess->exitCode() == 0) {
