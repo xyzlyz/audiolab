@@ -74,7 +74,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
     ui->txtLog->append("开始提取音频，请稍候...");
     QProcess *ffmpegProcess = new QProcess(this);
 
-    // 2. 组装参数
+    // 组装参数
     QStringList arguments;
     arguments << "-i" << videoPath
               << "-vn"
@@ -83,14 +83,12 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
               << "-y"
               << audioPath;
 
-    // 把 FFmpeg 的实时标准错误输出流（FFmpeg 的所有进度日志默认都在标准错误流里）
-    // 绑定到我们的日志文本框中。这样它只要有一丁点动静，我们都能立刻看到！
     connect(ffmpegProcess, &QProcess::readyReadStandardError, this, [=](){
         QString errorOutput = QString::fromLocal8Bit(ffmpegProcess->readAllStandardError());
         //ui->txtLog->append(errorOutput); // 实时滚动打印 FFmpeg 的内部进度
     });
 
-    // 防止进程因为某些特殊原因死在那，监测它启动失败的信号
+    // 监测进程启动失败的信号
     connect(ffmpegProcess, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
         ui->txtLog->append( "进程启动时发生错误，代码: " + QString::number(error) );
         ui->txtLog->append( "系统提示: " + ffmpegProcess->errorString() );
@@ -134,20 +132,14 @@ void AudioExtractor1Window::on_audio_route_change_clicked()
     // 获取当前 lineEditAudio 中已经有的路径，作为打开对话框时的默认推荐位置
     QString defaultPath = ui->lineEditAudio->text();
 
-    // 如果目前还没有路径，就默认打开 Mac 的下载目录或用户目录
-    if (defaultPath.isEmpty()) {
-        defaultPath = "/Users/tanyixiao/Downloads/output.mp3";
-    }
 
-    // 💡 弹出“保存文件”对话框
     QString customAudioPath = QFileDialog::getSaveFileName(
         this,
         "选择音频保存位置",      // 对话框标题
-        defaultPath,            // 默认文件名和路径
+        "",
         "音频文件 (*.mp3)"       // 限制保存格式为 MP3
         );
 
-    // 如果用户没有点取消（即路径不为空），就把用户选的自定义路径更新到输入框里
     if (!customAudioPath.isEmpty()) {
         ui->lineEditAudio->setText(customAudioPath);
         ui->txtLog->append("📝 用户更改保存路径为: " + customAudioPath);
