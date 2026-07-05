@@ -27,7 +27,7 @@
    <widget class="QPushButton" name="To_audioextract">
     <property name="geometry">
      <rect>
-      <x>370</x>
+      <x>390</x>
       <y>170</y>
       <width>120</width>
       <height>50</height>
@@ -76,7 +76,7 @@
    <widget class="QPushButton" name="To_audiocut">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>220</x>
       <y>170</y>
       <width>120</width>
       <height>50</height>
@@ -144,7 +144,7 @@ QLabel#label_3 {
    <widget class="QPushButton" name="scut">
     <property name="geometry">
      <rect>
-      <x>540</x>
+      <x>560</x>
       <y>170</y>
       <width>131</width>
       <height>51</height>
