@@ -90,7 +90,7 @@ void silencecut::on_start_cutting_clicked()
 
         QStringList arguments;
         arguments << "-i" << input_address
-                  << "-af" << "silencedetect=noise=-30dB:d=0.5" //判定标准：低于-30分贝且持续0.5秒以上
+                  << "-af" << "silencedetect=noise=-35dB:d=0.5" //判定标准：低于-30分贝且持续0.5秒以上
                   << "-f" << "null"
                   << "-";
 
@@ -174,7 +174,7 @@ void silencecut::startActualCutting()
                 continue;
             }
 
-            args << "-to" << QString::number(endTime);
+            args << "-to" << QString::number(endTime + 1.5);
         }
 
         args << "-i"       << inputPath

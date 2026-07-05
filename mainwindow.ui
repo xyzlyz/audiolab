@@ -151,7 +151,7 @@ QLabel#label_3 {
      </rect>
     </property>
     <property name="text">
-     <string>静音提取</string>
+     <string>静音切分</string>
     </property>
    </widget>
   </widget>
