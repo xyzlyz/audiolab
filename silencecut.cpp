@@ -29,7 +29,7 @@ void silencecut::on_audio_select_botton_clicked()
     if (!filePath.isEmpty()) {
         // 显示输入路径
         ui->input_address->setText(filePath);
-        ui->output_address->setText(filePath);
+        ui->output_address->setText(QFileInfo(filePath).absolutePath());
 
         // 在TextLog中打印日志
         ui->TextLog->append(QString("<font color='#007AFF'><b>[输入]</b></font> 已选择音频：%1").arg(filePath));
@@ -40,14 +40,16 @@ void silencecut::on_audio_select_botton_clicked()
 
 void silencecut::on_output_address_select_clicked()
 {
-    QString out_filePath = QFileDialog::getOpenFileName(
+    QString out_dirPath = QFileDialog::getExistingDirectory(
         this,
-        tr("选择要存储的位置"),
+        tr("选择要存储的文件夹位置"),
         "",
-        tr("")
+        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
         );
-    if(!out_filePath.isEmpty()){
-        ui->output_address->setText(out_filePath);
+
+    if (!out_dirPath.isEmpty()) {
+        // 把选好的文件夹路径显示到输入框里
+        ui->output_address->setText(out_dirPath);
     }
 }
 
@@ -73,7 +75,10 @@ void silencecut::on_start_cutting_clicked()
             return;
         }
 
+        m_ffmpegPath = ffmpegPath;
+
         ui->TextLog->append("<b>[第一步]</b> 正在寻找扫描静音区域，请稍候...");
+        silenceStartPoints.clear();
 
         detectProcess = new QProcess(this);
 
@@ -145,48 +150,64 @@ void silencecut::startActualCutting()
 
     // 准备时间切片阵列
     QVector<double> cuts = silenceStartPoints;
-    cuts.prepend(0.0); // 在最前面塞入 0.0 秒作为起点
+    cuts.prepend(0.0); // 塞入起点
 
-    //哪怕不加终点，FFmpeg 到结尾也会自动停止。
-    // 为了保险，我们加一个极大的数（比如99999），FFmpeg 切到文件末尾就会自动优雅地停下来。
-    cuts.append(99999.0);
-
-    // 开始循环裁剪！
-    for (int i = 0; i < cuts.size() - 1; ++i) {
+    // 开始循环裁剪
+    for (int i = 0; i < cuts.size(); ++i) {
         double startTime = cuts[i];
-        double endTime = cuts[i + 1];
 
-        // 如果两点靠得太近（比如不到1秒），说明是连续静音，跳过不切
-        if (endTime - startTime < 1.0 && endTime < 90000.0) {
-            continue;
+        // 自动生成输出文件名
+        QString fileName = QString("split_part_%1.mp3").arg(i + 1);
+        QString outputFileName = QDir(outputDir).filePath(fileName);
+
+        QProcess *cutter = new QProcess(this);
+        QStringList args;
+
+        args << "-ss" << QString::number(startTime);
+
+        if (i < cuts.size() - 1) {
+            double endTime = cuts[i + 1];
+
+            // 过滤靠得太近的连续静音点
+            if (endTime - startTime < 1.5) {
+                cutter->deleteLater();
+                continue;
+            }
+
+            args << "-to" << QString::number(endTime);
         }
 
-        // 自动生成输出文件名（例如：part_1.mp3, part_2.mp3）
-        QString outputFileName = QString("%1/split_part_%2.mp3")
-                                     .arg(outputDir)
-                                     .arg(i + 1);
+        args << "-i"       << inputPath
+             << "-vn"
+             << "-acodec"  << "libmp3lame"
+             << "-q:a"     << "2"
+             << "-y"       << outputFileName;
 
-        // 切分
-        QProcess *cutter = new QProcess(this);
+        // 打印日志
+        if (i < cuts.size() - 1) {
+            ui->TextLog->append(QString("✂️ 正在裁剪第 %1 段：[%2秒 -> %3秒]...")
+                                    .arg(i + 1).arg(startTime).arg(cuts[i + 1]));
+        } else {
+            ui->TextLog->append(QString("✂️ 正在裁剪最后一段：[%1秒 -> 结尾]...").arg(startTime));
+        }
 
-        QStringList args;
-        args << "-ss" << QString::number(startTime) // 起始时间
-             << "-to" << QString::number(endTime)   // 结束时间
-             << "-i"  << inputPath
-             << "-c"  << "copy"
-             << "-y"                                //如果文件重名，自动覆盖
-             << outputFileName;
-
-        ui->TextLog->append(QString("✂️ 正在裁剪第 %1 段：[%2秒 -> %3秒]...")
-                               .arg(i + 1).arg(startTime).arg(endTime == 99999.0 ? "结尾" : QString::number(endTime)));
-
-        cutter->start("ffmpeg", args);
+        cutter->start(m_ffmpegPath, args);
         cutter->waitForFinished();
-        cutter->deleteLater(); // 销毁实例
+
+        //过滤音频结束后的空片段
+        QFileInfo checkFile(outputFileName);
+        if (checkFile.exists()) {
+            if (checkFile.size() < 1024) { // 小于 1KB 判定为无效
+                QFile::remove(outputFileName);
+                ui->TextLog->append(QString("<font color='#FF9500'>⚠️ 过滤空白/无效片段: %1</font>").arg(fileName));
+            } else {
+                ui->TextLog->append(QString("<font color='#34C759'>✅ 成功生成: %1 (%2 KB)</font>")
+                                        .arg(fileName).arg(checkFile.size() / 1024));
+            }
+        }
+
+        cutter->deleteLater();
     }
 
-    ui->TextLog->append("<br><font color='#34C759'><b>剪辑成功</b></font> 所有音频片段已成功自动生成！");
+    ui->TextLog->append("<br><font color='#34C759'><b>剪辑完成！</b></font>");
 }
-
-
-

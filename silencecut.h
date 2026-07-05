@@ -35,6 +35,7 @@ private:
     Ui::silencecut *ui;
     QProcess *detectProcess = nullptr;
     QVector<double> silenceStartPoints;
+    QString m_ffmpegPath;
 };
 
 #endif // SILENCECUT_H
