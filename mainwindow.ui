@@ -27,8 +27,8 @@
    <widget class="QPushButton" name="To_audioextract">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>170</y>
+      <x>410</x>
+      <y>160</y>
       <width>120</width>
       <height>50</height>
      </rect>
@@ -76,8 +76,8 @@
    <widget class="QPushButton" name="To_audiocut">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>170</y>
+      <x>240</x>
+      <y>160</y>
       <width>120</width>
       <height>50</height>
      </rect>
@@ -89,8 +89,8 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>170</y>
+      <x>70</x>
+      <y>160</y>
       <width>120</width>
       <height>50</height>
      </rect>
@@ -102,14 +102,14 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>260</x>
+      <x>210</x>
       <y>270</y>
-      <width>271</width>
+      <width>381</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>温馨提示：推荐使用 &lt;a href='https://github.com/zhuozhiyongde/PKU-Art?tab=readme-ov-file#-安装' style='color: #007AFF; font-weight: bold;'&gt;pku_art&lt;/a&gt; 下载教学网视频。</string>
+     <string>温馨提示：可以使用 &lt;a href='https://github.com/zhuozhiyongde/PKU-Art?tab=readme-ov-file#-安装' style='color: #007AFF; font-weight: bold;'&gt;pku_art&lt;/a&gt; 或者 url + header 下载教学网视频。</string>
     </property>
     <property name="openExternalLinks">
      <bool>true</bool>
@@ -144,8 +144,8 @@ QLabel#label_3 {
    <widget class="QPushButton" name="scut">
     <property name="geometry">
      <rect>
-      <x>560</x>
-      <y>170</y>
+      <x>580</x>
+      <y>160</y>
       <width>131</width>
       <height>51</height>
      </rect>
@@ -161,7 +161,7 @@ QLabel#label_3 {
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>29</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>
