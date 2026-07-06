@@ -14,26 +14,26 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    // 全局按钮样式，所有窗口按钮共用
-    this->setStyleSheet(R"(
-        QPushButton {
-            background-color: #ecf5c4;
-            color: black;
-            border-radius: 6px;
-            padding: 6px 14px;
-            font-size: 13px;
-            box-shadow: 0 3px 4px rgba(0,0,0,0.25);
-        }
-        QPushButton:hover {
-            background-color: #bdc791;
-            box-shadow: 0 4px 5px rgba(0,0,0,0.3);
-        }
-        QPushButton:pressed {
-            background-color: #858f57;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            transform: translateY(2px);
-        }
-    )");
+    // // 全局按钮样式，所有窗口按钮共用
+    // this->setStyleSheet(R"(
+    //     QPushButton {
+    //         background-color: #ecf5c4;
+    //         color: black;
+    //         border-radius: 6px;
+    //         padding: 6px 14px;
+    //         font-size: 13px;
+    //         box-shadow: 0 3px 4px rgba(0,0,0,0.25);
+    //     }
+    //     QPushButton:hover {
+    //         background-color: #bdc791;
+    //         box-shadow: 0 4px 5px rgba(0,0,0,0.3);
+    //     }
+    //     QPushButton:pressed {
+    //         background-color: #858f57;
+    //         box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    //         transform: translateY(2px);
+    //     }
+    // )");
 
 }
 //测试ffmpeg的版本以及调用路径
