@@ -2,7 +2,7 @@
 
 一个多功能音频提取软件
 
-<img src="resources/icons/audiolab.png" width=120 />
+<img src="src/resources/icons/audiolab.png" width=120 />
 
 
 ## 功能介绍
