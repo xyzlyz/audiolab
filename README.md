@@ -1,5 +1,9 @@
-# AudioLab
+# AudioLab 
+
 一个多功能音频提取软件
+
+<img src="resources/icons/audiolab.png" width="40%" />
+
 
 ## 功能介绍
 
