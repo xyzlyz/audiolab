@@ -1,5 +1,9 @@
-# AudioLab
+# AudioLab 
+
 一个多功能音频提取软件
+
+<img src="resources/icons/audiolab.png" width=120 />
+
 
 ## 功能介绍
 
@@ -11,7 +15,7 @@
 
 ## 相关信息
 
-[作业报告](media/15-作业报告.pdf)
+[报告](media/15-作业报告.pdf)
 
 [源代码](media/15-源代码.txt)
 
