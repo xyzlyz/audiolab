@@ -125,7 +125,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
     arguments << "-i" << videoPath
               << "-vn"
               << "-acodec" << "libmp3lame"
-              << "-q:a" << "2"
+              << "-b:a" << "32k"
               << "-y"
               << audioPath;
 

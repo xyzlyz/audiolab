@@ -119,7 +119,7 @@ void BatchExtractorWorker::startBatchProcess()
         arguments << "-i" << videoPath
                   << "-vn"
                   << "-acodec" << "libmp3lame"
-                  << "-q:a" << "2"
+                  << "-b:a" << "32k"
                   << "-y"
                   << audioPath;
 
