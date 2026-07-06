@@ -31,6 +31,8 @@ private slots:
 
 private:
     void stopActiveExtraction();
+    void loadSettings();
+    void saveSettings();
 
     Ui::AudioExtractor1Window *ui;
     QPointer<QProcess> m_ffmpegProcess;

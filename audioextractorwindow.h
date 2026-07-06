@@ -33,6 +33,8 @@ private slots:
 private:
     bool batchIsRunning() const;
     void requestBatchCancel();
+    void loadSettings();
+    void saveSettings();
 
     Ui::AudioExtractorWindow *ui;
     QPointer<QThread> m_batchThread;

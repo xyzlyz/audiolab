@@ -14,6 +14,7 @@
 #include <QSharedPointer>
 #include <QTextBrowser>
 #include <QCloseEvent>
+#include <QSettings>
 
 namespace {
 constexpr int kProgressReportIntervalMs = 3000;
@@ -139,17 +140,21 @@ AudioExtractor1Window::AudioExtractor1Window(QWidget *parent)
     ui->setupUi(this);
     setWindowTitle("音视频分离工具");
     ui->lineEditVideo->setPlaceholderText("可选择本地视频，也可直接输入 http/https URL");
-    ui->textEditHeaders->setPlaceholderText("可选。每行一个 Header，例如：\nAuthorization: Bearer xxxxx\nReferer: https://example.com");
+    ui->textEditHeaders->setPlaceholderText("可选，每行一个 Header。\n例如：Authorization: Bearer xxxxx\nReferer: https://example.com");
+    loadSettings();
 }
 
 AudioExtractor1Window::~AudioExtractor1Window()
 {
+    saveSettings();
     stopActiveExtraction();
     delete ui;
 }
 
 void AudioExtractor1Window::closeEvent(QCloseEvent *event)
 {
+    saveSettings();
+
     if (m_ffmpegProcess && m_ffmpegProcess->state() != QProcess::NotRunning) {
         if (ui) {
             ui->txtLog->append("⚠️ 正在关闭窗口，已请求中止当前音频提取...");
@@ -158,6 +163,42 @@ void AudioExtractor1Window::closeEvent(QCloseEvent *event)
     }
 
     QWidget::closeEvent(event);
+}
+
+
+void AudioExtractor1Window::loadSettings()
+{
+    QSettings settings("AudioLab", "AudioLab");
+    settings.beginGroup("AudioExtractor1Window");
+
+    ui->checkRememberHeaders->setChecked(settings.value("rememberHeaders", false).toBool());
+    if (ui->checkRememberHeaders->isChecked()) {
+        ui->textEditHeaders->setPlainText(settings.value("headers").toString());
+    }
+
+    ui->lineEditAudio->setText(settings.value("outputAudioPath").toString());
+    settings.endGroup();
+}
+
+void AudioExtractor1Window::saveSettings()
+{
+    if (!ui) {
+        return;
+    }
+
+    QSettings settings("AudioLab", "AudioLab");
+    settings.beginGroup("AudioExtractor1Window");
+
+    const bool rememberHeaders = ui->checkRememberHeaders->isChecked();
+    settings.setValue("rememberHeaders", rememberHeaders);
+    if (rememberHeaders) {
+        settings.setValue("headers", ui->textEditHeaders->toPlainText());
+    } else {
+        settings.remove("headers");
+    }
+
+    settings.setValue("outputAudioPath", ui->lineEditAudio->text().trimmed());
+    settings.endGroup();
 }
 
 void AudioExtractor1Window::stopActiveExtraction()

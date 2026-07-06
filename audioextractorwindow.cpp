@@ -13,6 +13,7 @@
 #include "batchextractorworker.h"
 #include <QCloseEvent>
 #include <QTimer>
+#include <QSettings>
 
 AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     : QWidget(parent)
@@ -21,12 +22,15 @@ AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     ui->setupUi(this);
     setWindowTitle("批量音视频分离工具");
     ui->textEditUrls->setPlaceholderText("可选。每行一个 http/https 视频 URL，点击开始时会并入批量列表");
-    ui->textEditHeaders->setPlaceholderText("可选。每行一个 Header，例如：\nAuthorization: Bearer xxxxx\nReferer: https://example.com");
+    ui->textEditHeaders->setPlaceholderText("可选，每行一个 Header。\n例如：Authorization: Bearer xxxxx\nReferer: https://example.com");
+    loadSettings();
 
 }
 
 AudioExtractorWindow::~AudioExtractorWindow()
 {
+    saveSettings();
+
     if (batchIsRunning()) {
         requestBatchCancel();
         if (m_batchThread) {
@@ -35,6 +39,42 @@ AudioExtractorWindow::~AudioExtractorWindow()
         }
     }
     delete ui;
+}
+
+
+void AudioExtractorWindow::loadSettings()
+{
+    QSettings settings("AudioLab", "AudioLab");
+    settings.beginGroup("AudioExtractorWindow");
+
+    ui->checkRememberHeaders->setChecked(settings.value("rememberHeaders", false).toBool());
+    if (ui->checkRememberHeaders->isChecked()) {
+        ui->textEditHeaders->setPlainText(settings.value("headers").toString());
+    }
+
+    ui->lineEditAudio->setText(settings.value("outputAudioDir").toString());
+    settings.endGroup();
+}
+
+void AudioExtractorWindow::saveSettings()
+{
+    if (!ui) {
+        return;
+    }
+
+    QSettings settings("AudioLab", "AudioLab");
+    settings.beginGroup("AudioExtractorWindow");
+
+    const bool rememberHeaders = ui->checkRememberHeaders->isChecked();
+    settings.setValue("rememberHeaders", rememberHeaders);
+    if (rememberHeaders) {
+        settings.setValue("headers", ui->textEditHeaders->toPlainText());
+    } else {
+        settings.remove("headers");
+    }
+
+    settings.setValue("outputAudioDir", ui->lineEditAudio->text().trimmed());
+    settings.endGroup();
 }
 
 bool AudioExtractorWindow::batchIsRunning() const
@@ -51,6 +91,8 @@ void AudioExtractorWindow::requestBatchCancel()
 
 void AudioExtractorWindow::closeEvent(QCloseEvent *event)
 {
+    saveSettings();
+
     if (batchIsRunning()) {
         if (!m_closeAfterCancel) {
             m_closeAfterCancel = true;
