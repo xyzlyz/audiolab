@@ -8,6 +8,8 @@
 #include <QStandardPaths>
 #include <QFileInfo>
 #include <QThread>
+#include <QUrl>
+#include <QRegularExpression>
 #include "batchextractorworker.h"
 
 AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
@@ -16,6 +18,8 @@ AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
 {
     ui->setupUi(this);
     setWindowTitle("批量音视频分离工具");
+    ui->textEditUrls->setPlaceholderText("可选。每行一个 http/https 视频 URL，点击开始时会并入批量列表");
+    ui->textEditHeaders->setPlaceholderText("可选。每行一个 Header，例如：\nAuthorization: Bearer xxxxx\nReferer: https://example.com");
 
 }
 
@@ -63,11 +67,19 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
         videoFiles << ui->listVideos->item(i)->text();
     }
 
+    QStringList urlLines = ui->textEditUrls->toPlainText().split(QRegularExpression("\\r?\\n"), Qt::SkipEmptyParts);
+    for (QString url : urlLines) {
+        url = url.trimmed();
+        if (!url.isEmpty()) {
+            videoFiles << url;
+        }
+    }
+
     QString outputDir = ui->lineEditAudio->text();
 
     // 判断是否有效
     if (videoFiles.isEmpty()) {
-        ui->txtLog->append("⚠️ 错误：请先往列表中添加视频文件！");
+        ui->txtLog->append("⚠️ 错误：请先添加本地视频文件或填写 URL！");
         return;
     }
     if (outputDir.isEmpty()) {
@@ -80,7 +92,7 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
 
     // 创建 Qt 多线程
     QThread* thread = new QThread(this);
-    BatchExtractorWorker* worker = new BatchExtractorWorker(videoFiles, outputDir);
+    BatchExtractorWorker* worker = new BatchExtractorWorker(videoFiles, outputDir, ui->textEditHeaders->toPlainText());
     worker->moveToThread(thread);
 
     // 线程启动时，让 worker 开始工作

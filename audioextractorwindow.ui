@@ -6,129 +6,127 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>496</width>
-    <height>415</height>
+    <width>620</width>
+    <height>620</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>批量音视频分离工具</string>
   </property>
   <property name="styleSheet">
    <string notr="true">#AudioExtractorWindow {
 background-color: qradialgradient(spread:repeat, cx:0.5, cy:0.5, radius:0.1, fx:0.5, fy:0.5, stop:0 rgb(255, 255, 255), stop:0.497326 rgb(255, 255, 204), stop:1 rgb(255, 255, 255))
 }</string>
   </property>
-  <widget class="QPushButton" name="btnSelectVideo">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>20</y>
-     <width>100</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>请选择视频文件</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btnExtractAudio">
-   <property name="geometry">
-    <rect>
-     <x>190</x>
-     <y>170</y>
-     <width>100</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>开始提取音频</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="lineEditAudio">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>220</y>
-     <width>391</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="readOnly">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>50</y>
-     <width>101</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>输入视频的路径：</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>200</y>
-     <width>101</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>输出音频的路径：</string>
-   </property>
-  </widget>
-  <widget class="QTextBrowser" name="txtLog">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>270</y>
-     <width>411</width>
-     <height>111</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="audio_route_change">
-   <property name="geometry">
-    <rect>
-     <x>440</x>
-     <y>215</y>
-     <width>41</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>更改</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>240</y>
-     <width>141</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>音频分离进程</string>
-   </property>
-  </widget>
-  <widget class="QListWidget" name="listVideos">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>70</y>
-     <width>421</width>
-     <height>91</height>
-    </rect>
-   </property>
-  </widget>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_buttons">
+     <item>
+      <widget class="QPushButton" name="btnSelectVideo">
+       <property name="text">
+        <string>添加本地视频</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnExtractAudio">
+       <property name="text">
+        <string>开始提取音频</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>本地视频列表：</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="listVideos">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>95</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelUrls">
+     <property name="text">
+      <string>URL 列表（可选，每行一个 http/https 视频 URL）：</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextEdit" name="textEditUrls">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>85</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelHeaders">
+     <property name="text">
+      <string>URL Header（可选，每行一个，对所有 URL 生效）：</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextEdit" name="textEditHeaders">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>85</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>输出音频的目录：</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_output">
+     <item>
+      <widget class="QLineEdit" name="lineEditAudio">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="audio_route_change">
+       <property name="text">
+        <string>更改</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_3">
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="text">
+      <string>音频分离进程</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextBrowser" name="txtLog"/>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
