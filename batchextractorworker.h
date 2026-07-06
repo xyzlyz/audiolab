@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QDir>
+#include <atomic>
 
 class BatchExtractorWorker : public QObject
 {
@@ -18,6 +19,7 @@ public:
 public slots:
     // 线程启动后的核心循环入口
     void startBatchProcess();
+    void requestCancel();
 
 signals:
     // 用信号把日志和进度传回给主线程 UI
@@ -29,4 +31,5 @@ private:
     QStringList m_videoFiles;
     QString m_outputDir; // 统一的输出目录
     QString m_httpHeaders; // URL 输入时携带的 HTTP Header
+    std::atomic_bool m_cancelRequested { false };
 };

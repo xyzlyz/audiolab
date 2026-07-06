@@ -13,6 +13,7 @@
 #include <QElapsedTimer>
 #include <QSharedPointer>
 #include <QTextBrowser>
+#include <QCloseEvent>
 
 namespace {
 constexpr int kProgressReportIntervalMs = 3000;
@@ -143,7 +144,46 @@ AudioExtractor1Window::AudioExtractor1Window(QWidget *parent)
 
 AudioExtractor1Window::~AudioExtractor1Window()
 {
+    stopActiveExtraction();
     delete ui;
+}
+
+void AudioExtractor1Window::closeEvent(QCloseEvent *event)
+{
+    if (m_ffmpegProcess && m_ffmpegProcess->state() != QProcess::NotRunning) {
+        if (ui) {
+            ui->txtLog->append("⚠️ 正在关闭窗口，已请求中止当前音频提取...");
+        }
+        stopActiveExtraction();
+    }
+
+    QWidget::closeEvent(event);
+}
+
+void AudioExtractor1Window::stopActiveExtraction()
+{
+    if (!m_ffmpegProcess || m_isStopping) {
+        return;
+    }
+
+    m_isStopping = true;
+    QProcess *process = m_ffmpegProcess.data();
+
+    // 窗口即将关闭时先断开所有与窗口/UI相关的信号，避免进程结束后继续访问已销毁控件。
+    process->disconnect(this);
+    disconnect(process, nullptr, this, nullptr);
+
+    if (process->state() != QProcess::NotRunning) {
+        process->terminate();
+        if (!process->waitForFinished(3000)) {
+            process->kill();
+            process->waitForFinished(3000);
+        }
+    }
+
+    process->deleteLater();
+    m_ffmpegProcess.clear();
+    m_isStopping = false;
 }
 
 void AudioExtractor1Window::on_btnSelectVideo_clicked()
@@ -211,7 +251,13 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
         ui->txtLog->append("已为 URL 请求携带自定义 Header。");
     }
 
+    if (m_ffmpegProcess && m_ffmpegProcess->state() != QProcess::NotRunning) {
+        ui->txtLog->append("⚠️ 已有提取任务正在进行，请等待结束或关闭窗口中止任务。");
+        return;
+    }
+
     QProcess *ffmpegProcess = new QProcess(this);
+    m_ffmpegProcess = ffmpegProcess;
     auto progressState = QSharedPointer<ExtractProgressState>::create();
     progressState->elapsed.start();
 
@@ -260,6 +306,10 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
 
                 progressTimer->stop();
                 maybeReportProgress(ui->txtLog, progressState, true);
+
+                if (m_ffmpegProcess == ffmpegProcess) {
+                    m_ffmpegProcess.clear();
+                }
 
                 if (exitCode == 0) {
                     ui->txtLog->append("\n🎉🎉🎉 音频提取成功！");

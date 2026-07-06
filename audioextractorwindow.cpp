@@ -11,6 +11,8 @@
 #include <QUrl>
 #include <QRegularExpression>
 #include "batchextractorworker.h"
+#include <QCloseEvent>
+#include <QTimer>
 
 AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     : QWidget(parent)
@@ -25,7 +27,45 @@ AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
 
 AudioExtractorWindow::~AudioExtractorWindow()
 {
+    if (batchIsRunning()) {
+        requestBatchCancel();
+        if (m_batchThread) {
+            m_batchThread->quit();
+            m_batchThread->wait(5000);
+        }
+    }
     delete ui;
+}
+
+bool AudioExtractorWindow::batchIsRunning() const
+{
+    return m_batchThread && m_batchThread->isRunning();
+}
+
+void AudioExtractorWindow::requestBatchCancel()
+{
+    if (m_batchWorker) {
+        m_batchWorker->requestCancel();
+    }
+}
+
+void AudioExtractorWindow::closeEvent(QCloseEvent *event)
+{
+    if (batchIsRunning()) {
+        if (!m_closeAfterCancel) {
+            m_closeAfterCancel = true;
+            ui->txtLog->append("⚠️ 正在关闭窗口，已请求中止批量音频提取，请等待当前 FFmpeg 进程退出...");
+            ui->btnExtractAudio->setEnabled(false);
+            requestBatchCancel();
+        } else {
+            requestBatchCancel();
+        }
+
+        event->ignore();
+        return;
+    }
+
+    QWidget::closeEvent(event);
 }
 
 void AudioExtractorWindow::on_btnSelectVideo_clicked()
@@ -87,12 +127,20 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
         return;
     }
 
+    if (batchIsRunning()) {
+        ui->txtLog->append("⚠️ 批量提取正在进行中，请等待结束或关闭窗口中止任务。");
+        return;
+    }
+
     ui->txtLog->append(QString("🎬 开始批量处理，共 %1 个文件...").arg(videoFiles.size()));
     ui->btnExtractAudio->setEnabled(false); // 禁用按钮防止重复点击
+    m_closeAfterCancel = false;
 
     // 创建 Qt 多线程
     QThread* thread = new QThread(this);
     BatchExtractorWorker* worker = new BatchExtractorWorker(videoFiles, outputDir, ui->textEditHeaders->toPlainText());
+    m_batchThread = thread;
+    m_batchWorker = worker;
     worker->moveToThread(thread);
 
     // 线程启动时，让 worker 开始工作
@@ -112,6 +160,19 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     // 销毁线程
     connect(worker, &BatchExtractorWorker::finishedAll, thread, &QThread::quit);
     connect(worker, &BatchExtractorWorker::finishedAll, worker, &BatchExtractorWorker::deleteLater);
+    connect(thread, &QThread::finished, this, [=](){
+        if (m_batchThread == thread) {
+            m_batchThread.clear();
+        }
+        if (m_batchWorker == worker) {
+            m_batchWorker.clear();
+        }
+
+        if (m_closeAfterCancel) {
+            m_closeAfterCancel = false;
+            QTimer::singleShot(0, this, &QWidget::close);
+        }
+    });
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
     // 线程启动

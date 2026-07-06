@@ -170,8 +170,15 @@ BatchExtractorWorker::BatchExtractorWorker(const QStringList& videoFiles, const 
 {
 }
 
+void BatchExtractorWorker::requestCancel()
+{
+    m_cancelRequested.store(true);
+}
+
 void BatchExtractorWorker::startBatchProcess()
 {
+    m_cancelRequested.store(false);
+
     int totalFiles = m_videoFiles.size();
     if (totalFiles == 0) {
         emit finishedAll();
@@ -196,6 +203,10 @@ void BatchExtractorWorker::startBatchProcess()
 
     // 开始批量循环
     for (int i = 0; i < totalFiles; ++i) {
+        if (m_cancelRequested.load()) {
+            emit logMessage(QString("⚠️ 批量提取已被用户中止，剩余 %1 个输入未处理。").arg(totalFiles - i));
+            break;
+        }
         QString videoPath = m_videoFiles[i].trimmed();
         const bool remoteInput = isRemoteInput(videoPath);
 
@@ -254,7 +265,18 @@ void BatchExtractorWorker::startBatchProcess()
             continue;
         }
 
+        bool canceledCurrentFile = false;
         while (ffmpegProcess->state() == QProcess::Running) {
+            if (m_cancelRequested.load()) {
+                canceledCurrentFile = true;
+                emit logMessage(QString("⚠️ [%1/%2] 收到窗口关闭请求，正在中止当前 FFmpeg 进程...").arg(i + 1).arg(totalFiles));
+                ffmpegProcess->terminate();
+                if (!ffmpegProcess->waitForFinished(3000)) {
+                    ffmpegProcess->kill();
+                    ffmpegProcess->waitForFinished(3000);
+                }
+                break;
+            }
             if (ffmpegProcess->waitForReadyRead(500)) {
                 const QString output = QString::fromLocal8Bit(ffmpegProcess->readAllStandardError());
                 updateProgressFromFfmpegOutput(output, progressState);
@@ -285,16 +307,26 @@ void BatchExtractorWorker::startBatchProcess()
                             .arg(i + 1)
                             .arg(totalFiles));
 
-        if (ffmpegProcess->exitCode() == 0) {
+        if (canceledCurrentFile) {
+            emit logMessage("⚠️ 当前文件提取已中止 -> " + audioName);
+        } else if (ffmpegProcess->exitCode() == 0) {
             emit logMessage("🎉 提取成功 -> " + audioName);
         } else {
             emit logMessage("❌ 提取失败，退出码: " + QString::number(ffmpegProcess->exitCode()));
         }
 
         ffmpegProcess->deleteLater();
+
+        if (m_cancelRequested.load()) {
+            break;
+        }
     }
 
     emit progressUpdated(totalFiles, totalFiles);
-    emit logMessage("\n🎉🎉🎉 所有文件/URL批量音频提取完成！");
+    if (m_cancelRequested.load()) {
+        emit logMessage("\n⚠️ 批量音频提取已中止。");
+    } else {
+        emit logMessage("\n🎉🎉🎉 所有文件/URL批量音频提取完成！");
+    }
     emit finishedAll();
 }
