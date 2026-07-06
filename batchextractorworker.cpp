@@ -37,6 +37,20 @@ QString normalizeHttpHeaders(const QString &rawHeaders)
     return normalizedLines.join("\r\n") + "\r\n";
 }
 
+QString normalizeAudioBitrate(const QString &rawBitrate)
+{
+    QString bitrate = rawBitrate.trimmed();
+    if (bitrate.isEmpty()) {
+        return "32k";
+    }
+
+    if (QRegularExpression(R"(^\d+$)").match(bitrate).hasMatch()) {
+        bitrate += "k";
+    }
+
+    return bitrate;
+}
+
 qint64 ffmpegTimeToMs(const QString &timeText)
 {
     static const QRegularExpression re(R"((\d+):(\d+):(\d+(?:\.\d+)?))");
@@ -165,8 +179,11 @@ QString displayNameForInput(const QString &input)
 }
 }
 
-BatchExtractorWorker::BatchExtractorWorker(const QStringList& videoFiles, const QString& outputDir, const QString& httpHeaders)
-    : m_videoFiles(videoFiles), m_outputDir(outputDir), m_httpHeaders(normalizeHttpHeaders(httpHeaders))
+BatchExtractorWorker::BatchExtractorWorker(const QStringList& videoFiles, const QString& outputDir, const QString& httpHeaders, const QString& bitrate)
+    : m_videoFiles(videoFiles),
+      m_outputDir(outputDir),
+      m_httpHeaders(normalizeHttpHeaders(httpHeaders)),
+      m_bitrate(normalizeAudioBitrate(bitrate))
 {
 }
 
@@ -195,6 +212,7 @@ void BatchExtractorWorker::startBatchProcess()
 
     emit logMessage("🎬 寻路成功！FFmpeg 绝对路径：" + ffmpegPath);
     emit logMessage(QString("⏱️ 批量提取过程中将每 %1 秒输出一次当前状态与进度。").arg(kProgressReportIntervalMs / 1000));
+    emit logMessage("🎚️ 音频比特率：" + m_bitrate);
     if (!m_httpHeaders.isEmpty()) {
         emit logMessage("🌐 URL 输入会携带自定义 HTTP Header。");
     }
@@ -243,7 +261,7 @@ void BatchExtractorWorker::startBatchProcess()
         arguments << "-i" << videoPath
                   << "-vn"
                   << "-acodec" << "libmp3lame"
-                  << "-b:a" << "32k"
+                  << "-b:a" << m_bitrate
                   << "-y"
                   << audioPath;
 

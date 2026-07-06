@@ -51,6 +51,21 @@ QString normalizeHttpHeaders(const QString &rawHeaders)
     return normalizedLines.join("\r\n") + "\r\n";
 }
 
+QString normalizeAudioBitrate(const QString &rawBitrate)
+{
+    QString bitrate = rawBitrate.trimmed();
+    if (bitrate.isEmpty()) {
+        return "32k";
+    }
+
+    // 允许用户直接输入 64、64k、128K 等；纯数字默认按 kbps 处理。
+    if (QRegularExpression(R"(^\d+$)").match(bitrate).hasMatch()) {
+        bitrate += "k";
+    }
+
+    return bitrate;
+}
+
 qint64 ffmpegTimeToMs(const QString &timeText)
 {
     static const QRegularExpression re(R"((\d+):(\d+):(\d+(?:\.\d+)?))");
@@ -139,7 +154,7 @@ AudioExtractor1Window::AudioExtractor1Window(QWidget *parent)
 {
     ui->setupUi(this);
     setWindowTitle("音视频分离工具");
-    ui->lineEditVideo->setPlaceholderText("可选择本地视频，也可直接输入 http/https URL");
+    ui->lineEditVideo->setPlaceholderText("可以选择本地视频，也可直接输入 http/https URL。");
     ui->textEditHeaders->setPlaceholderText("可选，每行一个 Header。\n例如：Authorization: Bearer xxxxx\nReferer: https://example.com");
     loadSettings();
 }
@@ -177,6 +192,7 @@ void AudioExtractor1Window::loadSettings()
     }
 
     ui->lineEditAudio->setText(settings.value("outputAudioPath").toString());
+    ui->lineEditBitrate->setText(settings.value("bitrate", "32k").toString());
     settings.endGroup();
 }
 
@@ -198,6 +214,7 @@ void AudioExtractor1Window::saveSettings()
     }
 
     settings.setValue("outputAudioPath", ui->lineEditAudio->text().trimmed());
+    settings.setValue("bitrate", normalizeAudioBitrate(ui->lineEditBitrate->text()));
     settings.endGroup();
 }
 
@@ -261,6 +278,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
     QString audioPath = ui->lineEditAudio->text().trimmed();
     const bool remoteInput = isRemoteInput(videoPath);
     const QString headers = normalizeHttpHeaders(ui->textEditHeaders->toPlainText());
+    const QString bitrate = normalizeAudioBitrate(ui->lineEditBitrate->text());
 
     //判断是否选择了视频文件或填写 URL
     if (videoPath.isEmpty() || audioPath.isEmpty()) {
@@ -288,6 +306,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
     ui->txtLog->append("寻路成功！FFmpeg 绝对路径：" + ffmpegPath);
     ui->txtLog->append(remoteInput ? "开始从 URL 提取音频，请稍候..." : "开始提取本地音频，请稍候...");
     ui->txtLog->append(QString("将每 %1 秒输出一次当前状态与进度。").arg(kProgressReportIntervalMs / 1000));
+    ui->txtLog->append("音频比特率：" + bitrate);
     if (remoteInput && !headers.isEmpty()) {
         ui->txtLog->append("已为 URL 请求携带自定义 Header。");
     }
@@ -310,7 +329,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
     arguments << "-i" << videoPath
               << "-vn"
               << "-acodec" << "libmp3lame"
-              << "-b:a" << "32k"
+              << "-b:a" << bitrate
               << "-y"
               << audioPath;
 

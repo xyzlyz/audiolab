@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>620</width>
-    <height>620</height>
+    <height>660</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,6 +22,19 @@ background-color: qradialgradient(spread:repeat, cx:0.5, cy:0.5, radius:0.1, fx:
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_buttons">
      <item>
+      <spacer name="horizontalSpacer_add_left">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QPushButton" name="btnSelectVideo">
        <property name="text">
         <string>添加本地视频</string>
@@ -29,11 +42,17 @@ background-color: qradialgradient(spread:repeat, cx:0.5, cy:0.5, radius:0.1, fx:
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btnExtractAudio">
-       <property name="text">
-        <string>开始提取音频</string>
+      <spacer name="horizontalSpacer_add_right">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
-      </widget>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>
@@ -121,12 +140,88 @@ background-color: qradialgradient(spread:repeat, cx:0.5, cy:0.5, radius:0.1, fx:
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_start">
+     <item>
+      <spacer name="horizontalSpacer_start_left">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_bitrate">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="labelBitrate">
+         <property name="maximumSize">
+          <size>
+           <width>40</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>比特率</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEditBitrate">
+         <property name="maximumSize">
+          <size>
+           <width>40</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+         <property name="placeholderText">
+          <string>32k</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnExtractAudio">
+       <property name="text">
+        <string>开始提取音频</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_start_right">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QLabel" name="label_3">
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
      <property name="text">
       <string>音频分离进程</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
    </item>

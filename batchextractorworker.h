@@ -14,7 +14,7 @@ class BatchExtractorWorker : public QObject
     Q_OBJECT
 public:
     // 构造函数：把主线程收集到的视频/URL列表传进来
-    BatchExtractorWorker(const QStringList& videoFiles, const QString& outputDir, const QString& httpHeaders = QString());
+    BatchExtractorWorker(const QStringList& videoFiles, const QString& outputDir, const QString& httpHeaders = QString(), const QString& bitrate = QString("32k"));
 
 public slots:
     // 线程启动后的核心循环入口
@@ -31,5 +31,6 @@ private:
     QStringList m_videoFiles;
     QString m_outputDir; // 统一的输出目录
     QString m_httpHeaders; // URL 输入时携带的 HTTP Header
+    QString m_bitrate; // 音频输出比特率，默认 32k
     std::atomic_bool m_cancelRequested { false };
 };

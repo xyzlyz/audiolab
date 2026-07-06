@@ -15,13 +15,30 @@
 #include <QTimer>
 #include <QSettings>
 
+namespace {
+QString normalizeAudioBitrate(const QString &rawBitrate)
+{
+    QString bitrate = rawBitrate.trimmed();
+    if (bitrate.isEmpty()) {
+        return "32k";
+    }
+
+    if (QRegularExpression(R"(^\d+$)").match(bitrate).hasMatch()) {
+        bitrate += "k";
+    }
+
+    return bitrate;
+}
+}
+
+
 AudioExtractorWindow::AudioExtractorWindow(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::AudioExtractorWindow)
 {
     ui->setupUi(this);
     setWindowTitle("批量音视频分离工具");
-    ui->textEditUrls->setPlaceholderText("可选。每行一个 http/https 视频 URL，点击开始时会并入批量列表");
+    ui->textEditUrls->setPlaceholderText("可选，每行一个 http/https 视频 URL，点击开始时会并入批量列表。");
     ui->textEditHeaders->setPlaceholderText("可选，每行一个 Header。\n例如：Authorization: Bearer xxxxx\nReferer: https://example.com");
     loadSettings();
 
@@ -53,6 +70,7 @@ void AudioExtractorWindow::loadSettings()
     }
 
     ui->lineEditAudio->setText(settings.value("outputAudioDir").toString());
+    ui->lineEditBitrate->setText(settings.value("bitrate", "32k").toString());
     settings.endGroup();
 }
 
@@ -74,6 +92,7 @@ void AudioExtractorWindow::saveSettings()
     }
 
     settings.setValue("outputAudioDir", ui->lineEditAudio->text().trimmed());
+    settings.setValue("bitrate", normalizeAudioBitrate(ui->lineEditBitrate->text()));
     settings.endGroup();
 }
 
@@ -158,6 +177,7 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     }
 
     QString outputDir = ui->lineEditAudio->text();
+    const QString bitrate = normalizeAudioBitrate(ui->lineEditBitrate->text());
 
     // 判断是否有效
     if (videoFiles.isEmpty()) {
@@ -175,12 +195,13 @@ void AudioExtractorWindow::on_btnExtractAudio_clicked()
     }
 
     ui->txtLog->append(QString("🎬 开始批量处理，共 %1 个文件...").arg(videoFiles.size()));
+    ui->txtLog->append("音频比特率：" + bitrate);
     ui->btnExtractAudio->setEnabled(false); // 禁用按钮防止重复点击
     m_closeAfterCancel = false;
 
     // 创建 Qt 多线程
     QThread* thread = new QThread(this);
-    BatchExtractorWorker* worker = new BatchExtractorWorker(videoFiles, outputDir, ui->textEditHeaders->toPlainText());
+    BatchExtractorWorker* worker = new BatchExtractorWorker(videoFiles, outputDir, ui->textEditHeaders->toPlainText(), bitrate);
     m_batchThread = thread;
     m_batchWorker = worker;
     worker->moveToThread(thread);
