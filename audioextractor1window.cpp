@@ -9,8 +9,22 @@
 #include <QFileInfo>
 #include <QUrl>
 #include <QRegularExpression>
+#include <QTimer>
+#include <QElapsedTimer>
+#include <QSharedPointer>
+#include <QTextBrowser>
 
 namespace {
+constexpr int kProgressReportIntervalMs = 3000;
+
+struct ExtractProgressState
+{
+    qint64 durationMs = -1;
+    qint64 currentMs = -1;
+    QElapsedTimer elapsed;
+    qint64 lastReportMs = 0;
+};
+
 bool isRemoteInput(const QString &input)
 {
     const QUrl url(input.trimmed());
@@ -33,6 +47,87 @@ QString normalizeHttpHeaders(const QString &rawHeaders)
     }
 
     return normalizedLines.join("\r\n") + "\r\n";
+}
+
+qint64 ffmpegTimeToMs(const QString &timeText)
+{
+    static const QRegularExpression re(R"((\d+):(\d+):(\d+(?:\.\d+)?))");
+    const QRegularExpressionMatch match = re.match(timeText);
+    if (!match.hasMatch()) {
+        return -1;
+    }
+
+    const int hours = match.captured(1).toInt();
+    const int minutes = match.captured(2).toInt();
+    const double seconds = match.captured(3).toDouble();
+    return static_cast<qint64>(((hours * 3600) + (minutes * 60) + seconds) * 1000.0);
+}
+
+QString formatMs(qint64 ms)
+{
+    if (ms < 0) {
+        return "未知";
+    }
+
+    const qint64 totalSeconds = ms / 1000;
+    const qint64 hours = totalSeconds / 3600;
+    const qint64 minutes = (totalSeconds % 3600) / 60;
+    const qint64 seconds = totalSeconds % 60;
+    return QString("%1:%2:%3")
+        .arg(hours, 2, 10, QChar('0'))
+        .arg(minutes, 2, 10, QChar('0'))
+        .arg(seconds, 2, 10, QChar('0'));
+}
+
+void updateProgressFromFfmpegOutput(const QString &output, const QSharedPointer<ExtractProgressState> &state)
+{
+    static const QRegularExpression durationRe(R"(Duration:\s*(\d+:\d+:\d+(?:\.\d+)?))");
+    static const QRegularExpression timeRe(R"(time=\s*(\d+:\d+:\d+(?:\.\d+)?))");
+
+    if (state->durationMs < 0) {
+        const QRegularExpressionMatch durationMatch = durationRe.match(output);
+        if (durationMatch.hasMatch()) {
+            state->durationMs = ffmpegTimeToMs(durationMatch.captured(1));
+        }
+    }
+
+    QRegularExpressionMatchIterator it = timeRe.globalMatch(output);
+    while (it.hasNext()) {
+        const QRegularExpressionMatch match = it.next();
+        state->currentMs = ffmpegTimeToMs(match.captured(1));
+    }
+}
+
+QString progressText(const QSharedPointer<ExtractProgressState> &state)
+{
+    if (state->durationMs > 0 && state->currentMs >= 0) {
+        const double percent = qMin(100.0, state->currentMs * 100.0 / state->durationMs);
+        return QString("当前进度：%1 / %2（%3%）")
+            .arg(formatMs(state->currentMs), formatMs(state->durationMs))
+            .arg(QString::number(percent, 'f', 1));
+    }
+
+    if (state->currentMs >= 0) {
+        return QString("当前进度：已处理到 %1，总时长未知").arg(formatMs(state->currentMs));
+    }
+
+    return QString("当前状态：FFmpeg 正在分析输入/准备提取，已运行 %1 秒")
+        .arg(state->elapsed.isValid() ? state->elapsed.elapsed() / 1000 : 0);
+}
+
+void maybeReportProgress(QTextBrowser *log, const QSharedPointer<ExtractProgressState> &state, bool force = false)
+{
+    if (!state->elapsed.isValid()) {
+        return;
+    }
+
+    const qint64 now = state->elapsed.elapsed();
+    if (!force && now - state->lastReportMs < kProgressReportIntervalMs) {
+        return;
+    }
+
+    state->lastReportMs = now;
+    log->append("⏳ " + progressText(state));
 }
 }
 
@@ -111,11 +206,14 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
 
     ui->txtLog->append("寻路成功！FFmpeg 绝对路径：" + ffmpegPath);
     ui->txtLog->append(remoteInput ? "开始从 URL 提取音频，请稍候..." : "开始提取本地音频，请稍候...");
+    ui->txtLog->append(QString("将每 %1 秒输出一次当前状态与进度。").arg(kProgressReportIntervalMs / 1000));
     if (remoteInput && !headers.isEmpty()) {
         ui->txtLog->append("已为 URL 请求携带自定义 Header。");
     }
 
     QProcess *ffmpegProcess = new QProcess(this);
+    auto progressState = QSharedPointer<ExtractProgressState>::create();
+    progressState->elapsed.start();
 
     // 组装参数。注意：-headers 必须放在 -i 之前，才会作用于输入 URL。
     QStringList arguments;
@@ -129,10 +227,18 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
               << "-y"
               << audioPath;
 
+    QTimer *progressTimer = new QTimer(ffmpegProcess);
+    progressTimer->setInterval(kProgressReportIntervalMs);
+    connect(progressTimer, &QTimer::timeout, this, [=](){
+        if (ffmpegProcess->state() == QProcess::Running) {
+            maybeReportProgress(ui->txtLog, progressState, true);
+        }
+    });
+
     connect(ffmpegProcess, &QProcess::readyReadStandardError, this, [=](){
-        QString errorOutput = QString::fromLocal8Bit(ffmpegProcess->readAllStandardError());
-        Q_UNUSED(errorOutput);
-        //ui->txtLog->append(errorOutput); // 实时滚动打印 FFmpeg 的内部进度
+        const QString errorOutput = QString::fromLocal8Bit(ffmpegProcess->readAllStandardError());
+        updateProgressFromFfmpegOutput(errorOutput, progressState);
+        maybeReportProgress(ui->txtLog, progressState);
     });
 
     // 监测进程启动失败的信号
@@ -143,6 +249,7 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
 
     // 启动后台进程
     ffmpegProcess->start(ffmpegPath, arguments);
+    progressTimer->start();
 
     // 绑定结束信号
     connect(ffmpegProcess,
@@ -150,6 +257,9 @@ void AudioExtractor1Window::on_btnExtractAudio_clicked()
             this,
             [=](int exitCode, QProcess::ExitStatus exitStatus) {
                 Q_UNUSED(exitStatus);
+
+                progressTimer->stop();
+                maybeReportProgress(ui->txtLog, progressState, true);
 
                 if (exitCode == 0) {
                     ui->txtLog->append("\n🎉🎉🎉 音频提取成功！");
